@@ -297,7 +297,7 @@ outlier_rows_iqr
 
 
     
-![png](har_clustering_files/har_clustering_14_0.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_14_0.png)
     
 
 
@@ -792,7 +792,7 @@ plt.show()
 
 
     
-![png](har_clustering_files/har_clustering_22_0.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_22_0.png)
     
 
 
@@ -828,7 +828,7 @@ plt.show()
 
 
     
-![png](har_clustering_files/har_clustering_23_0.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_23_0.png)
     
 
 
@@ -844,7 +844,7 @@ plt.show()
 
 
     
-![png](har_clustering_files/har_clustering_24_0.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_24_0.png)
     
 
 
@@ -860,7 +860,7 @@ plt.show()
 
 
     
-![png](har_clustering_files/har_clustering_25_0.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_25_0.png)
     
 
 
@@ -880,7 +880,7 @@ plt.show()
 
 
     
-![png](har_clustering_files/har_clustering_26_1.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_26_1.png)
     
 
 
@@ -924,7 +924,7 @@ plt.show()
 
 
     
-![png](har_clustering_files/har_clustering_31_1.png)
+![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_31_1.png)
     
 
 

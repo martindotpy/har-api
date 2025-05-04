@@ -1,0 +1,9 @@
+{% extends 'markdown/index.md.j2' %}
+
+{% block data_png %}
+    {% if "filenames" in output.metadata %}
+![png]({% if output.metadata.filenames['image/png'].startswith('har_clustering_files') %}https://api-har.vluepixel.com/api/notebook/{{ output.metadata.filenames['image/png'] }}{% else %}{{ output.metadata.filenames['image/png'] | path2url }}{% endif %})
+    {% else %}
+![png](data:image/png;base64,{{ output.data['image/png'] }})
+    {% endif %}
+{% endblock data_png %}

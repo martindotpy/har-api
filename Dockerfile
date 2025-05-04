@@ -22,6 +22,7 @@ COPY --from=builder /bin/uv /bin/uv
 COPY --from=builder /app /app
 
 COPY src src
+RUN rm src/har_clustering.ipynb src/har_clustering.md.j2
 
 ENV PATH="/app/.venv/bin:$PATH"
 

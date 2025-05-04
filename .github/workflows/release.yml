@@ -52,7 +52,7 @@ jobs:
         run: |
           rm -rf src/assets/notebook
 
-          uv run --with nbconvert \
+          uv run --isolated --with nbconvert \
             python -m jupyter nbconvert --to markdown doc/har_clustering.ipynb \
             --output-dir src/assets/notebook
 

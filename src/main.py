@@ -15,9 +15,11 @@ for router in routers:
 if __name__ == "__main__":
     PORT: Final[int] = int(os.environ.get("PORT", "8000"))
     HOST: Final[str] = os.environ.get("HOST", "127.0.0.1")
+    DEV: Final[bool] = os.environ.get("DEV", "false").lower() == "true"
 
     uvicorn.run(
         "main:app",
         host=HOST,
         port=PORT,
+        reload=DEV,
     )

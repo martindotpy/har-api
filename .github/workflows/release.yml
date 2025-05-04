@@ -1,4 +1,4 @@
-name: Release the api
+name: Release the api and build notebook
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy_release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       TMP_FOLDER: ~/.tmp/api.har.martindotpy.dev
 
@@ -17,6 +17,14 @@ jobs:
 
       - name: Setup cloudflared
         uses: AnimMouse/setup-cloudflared@v2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
 
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
@@ -31,6 +39,20 @@ jobs:
               IdentityFile ~/.ssh/martindotpy.dev
               ProxyCommand cloudflared access ssh --hostname %h
 
+      # Notebook build
+      - name: Build the notebook
+        run: |
+          rm -rf src/assets/notebook
+
+          uv run --with nbconvert \
+            python -m jupyter nbconvert --to markdown doc/har_clustering.ipynb \
+            --output-dir src/assets/notebook
+
+          git add src/assets/notebook
+          git commit -m "feat: Update notebook build"
+          git push origin main
+
+      # Deploy
       - name: Create a temporary directory on the server
         run: |
           ssh -T ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'

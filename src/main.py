@@ -9,7 +9,7 @@ from controller import routers
 app = FastAPI()
 
 for router in routers:
-    app.include_router(router)
+    app.include_router(router, prefix="/api")
 
 
 if __name__ == "__main__":

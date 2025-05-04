@@ -1,0 +1,74 @@
+name: Release the api
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_release:
+    runs-on: ubuntu-24.04
+    env:
+      TMP_FOLDER: ~/.tmp/api.har.martindotpy.dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup cloudflared
+        uses: AnimMouse/setup-cloudflared@v2
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: martindotpy.dev
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          config: |
+            Host ${{ secrets.SSH_HOST }}
+              User ${{ secrets.SSH_USERNAME }}
+              Port ${{ secrets.SSH_PORT }}
+              IdentityFile ~/.ssh/martindotpy.dev
+              ProxyCommand cloudflared access ssh --hostname %h
+
+      - name: Create a temporary directory on the server
+        run: |
+          ssh -T ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            mkdir -p ${{ env.TMP_FOLDER }}
+          EOF
+
+      - name: Copy the code to the server
+        run: |
+          rsync -avz --delete \
+            -e "ssh" \
+            . ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ env.TMP_FOLDER }}
+
+      - name: Build and run the docker image
+        run: |
+          ssh -T ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ${{ env.TMP_FOLDER }}
+            PRE_IMAGE=$(docker images -q har-api:latest)
+
+            function cleanup {
+              # Remove the temporary directory
+              rm -rf ${{ env.TMP_FOLDER }}
+            }
+            trap cleanup EXIT
+
+            # Build
+            export DOCKER_BUILDKIT=1
+            docker build -t har-api:latest .
+
+            # Remove old image
+            docker rm -f har-api
+            if [ -n "$PRE_IMAGE" ]; then
+              docker rmi $PRE_IMAGE
+            fi
+
+            # Run
+            docker run -d \
+              -e PORT=${{ secrets.PORT }} \
+              -p ${{ secrets.PORT }}:${{ secrets.PORT }} \
+              --name har-api \
+              har-api:latest
+          EOF

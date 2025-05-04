@@ -1,0 +1,20 @@
+[project]
+name = "har_api"
+version = "1.0.0"
+description = "Api para obtener la predicción del HAR (Human Activity Recognition)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.12",
+    "pandas>=2.2.3",
+    "scikit-learn>=1.6.1",
+    "uvicorn>=0.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "ipykernel>=6.29.5",
+    "matplotlib>=3.10.1",
+    "seaborn>=0.13.2",
+]

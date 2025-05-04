@@ -15,10 +15,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup cloudflared
+      - name: Config git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Set up cloudflared
         uses: AnimMouse/setup-cloudflared@v2
 
-      - name: Install uv
+      - name: Set up uv
         uses: astral-sh/setup-uv@v6
 
       - name: Set up Python

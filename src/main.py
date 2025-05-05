@@ -1,22 +1,21 @@
-import os
-from typing import Final
-
 import uvicorn
 from fastapi import FastAPI
 
+from config import DEV, HOST, PATH, PORT
 from controller import routers
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=f"{PATH}/docs",
+    redoc_url=f"{PATH}/redoc",
+    openapi_url=f"{PATH}/openapi.json",
+    generate_unique_id_function=lambda path: path.name,
+)
 
+# Routers
 for router in routers:
-    app.include_router(router, prefix="/api")
-
+    app.include_router(router, prefix=PATH)
 
 if __name__ == "__main__":
-    PORT: Final[int] = int(os.environ.get("PORT", "8000"))
-    HOST: Final[str] = os.environ.get("HOST", "127.0.0.1")
-    DEV: Final[bool] = os.environ.get("DEV", "false").lower() == "true"
-
     uvicorn.run(
         "main:app",
         host=HOST,

@@ -3,12 +3,12 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-notebook_router = APIRouter()
+notebook_router = APIRouter(tags=["notebook"])
 notebook_folder = Path(__file__).parent.parent / "assets" / "notebook"
 
 
 @notebook_router.get("/notebook/{file_path:path}")
-def get_file(file_path: str) -> FileResponse:
+def get_notebook_file(file_path: str) -> FileResponse:
     """Health check endpoint.
 
     Returns:

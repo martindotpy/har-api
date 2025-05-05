@@ -9,10 +9,13 @@ notebook_folder = Path(__file__).parent.parent / "assets" / "notebook"
 
 @notebook_router.get("/notebook/{file_path:path}")
 def get_notebook_file(file_path: str) -> FileResponse:
-    """Health check endpoint.
+    """Retrieve a notebook file.
+
+    Args:
+        file_path (str): The path to the notebook file.
 
     Returns:
-        dict[str, str]: A dictionary indicating the health status.
+        FileResponse: The notebook file response.
 
     """
     file = notebook_folder / file_path

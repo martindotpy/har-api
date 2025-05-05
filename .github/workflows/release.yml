@@ -20,8 +20,8 @@ jobs:
 
       - name: Config git
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
 
       - name: Set up cloudflared
         uses: AnimMouse/setup-cloudflared@v2
@@ -49,10 +49,11 @@ jobs:
 
       # Notebook build
       - name: Build the notebook
+        continue-on-error: true
         run: |
           rm -rf src/assets/notebook
 
-          uv run --isolated --with nbconvert \
+          uv run --no-sync --with nbconvert \
             python -m jupyter nbconvert --to markdown src/har_clustering.ipynb \
             --template-file src/har_clustering.md.j2 \
             --output-dir src/assets/notebook

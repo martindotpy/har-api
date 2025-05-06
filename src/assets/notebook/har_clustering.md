@@ -1,29 +1,48 @@
 # **Hard Clustering: Análisis de Patrones de Movimiento con K-Means 📊**
 
-## 🎓 **Universidad:** Fundación Universitaria Konrad Lorenz  
-### 🏫 **Facultad:** Facultad de Matemáticas e Ingenierías  
-### 📖 **Curso:** Introducción a Big Data  
+## 🎓 **Universidad:** Fundación Universitaria Konrad Lorenz
+
+### 🏫 **Facultad:** Facultad de Matemáticas e Ingenierías
+
+### 📖 **Curso:** Introducción a Big Data
 
 ## **🧑‍💻 Integrantes:**
-- Ángel Stiven Pinzón Sánchez - 506221100  
-- Andrea Valentina Cubillos Pinto - 506231711  
-- Martín Alexander Ramos Yampufe - 506251051  
 
+- Ángel Stiven Pinzón Sánchez - 506221100
+- Andrea Valentina Cubillos Pinto - 506231711
+- Martín Alexander Ramos Yampufe - 506251051
 
 ## **Introducción**
 
-**El Reconocimiento de Actividad Humana (HAR)** es una técnica ampliamente utilizada en el monitoreo de la salud, el análisis del rendimiento deportivo y el seguimiento de la actividad física mediante dispositivos portátiles. Estos sistemas suelen basarse en datos obtenidos de acelerómetros y giroscopios, los cuales permiten detectar patrones de movimiento y clasificar actividades.
+**El Reconocimiento de Actividad Humana (HAR)** es una técnica ampliamente
+utilizada en el monitoreo de la salud, el análisis del rendimiento deportivo y
+el seguimiento de la actividad física mediante dispositivos portátiles. Estos
+sistemas suelen basarse en datos obtenidos de acelerómetros y giroscopios, los
+cuales permiten detectar patrones de movimiento y clasificar actividades.
 
-Uno de los principales desafíos en HAR es la detección de inactividad prolongada en condiciones de vida libre, un aspecto clave para la prevención de enfermedades asociadas al sedentarismo. Sin embargo, la mayoría de los estudios actuales dependen de modelos supervisados, los cuales requieren datos etiquetados, lo que puede ser un proceso costoso y propenso a errores.
+Uno de los principales desafíos en HAR es la detección de inactividad prolongada
+en condiciones de vida libre, un aspecto clave para la prevención de
+enfermedades asociadas al sedentarismo. Sin embargo, la mayoría de los estudios
+actuales dependen de modelos supervisados, los cuales requieren datos
+etiquetados, lo que puede ser un proceso costoso y propenso a errores.
 
-Para abordar esta limitación, en este proyecto aplicaremos K-Means, un algoritmo de aprendizaje no supervisado, para analizar datos de acelerómetros y detectar segmentos de tiempo con baja actividad física. Este enfoque nos permitirá identificar patrones de inactividad sin necesidad de etiquetas previas, facilitando su aplicación en el monitoreo de la salud y la detección temprana de conductas sedentarias.
+Para abordar esta limitación, en este proyecto aplicaremos K-Means, un algoritmo
+de aprendizaje no supervisado, para analizar datos de acelerómetros y detectar
+segmentos de tiempo con baja actividad física. Este enfoque nos permitirá
+identificar patrones de inactividad sin necesidad de etiquetas previas,
+facilitando su aplicación en el monitoreo de la salud y la detección temprana de
+conductas sedentarias.
 
 ## **Objetivos**
 
-El objetivo de este análisis es identificar patrones de movimiento a partir de datos de acelerómetros, explorando relaciones entre variables y reduciendo la dimensionalidad de los datos para facilitar su agrupamiento mediante **K-Means**. Esto permitirá detectar segmentos de baja actividad física y evaluar su utilidad en el Reconocimiento de Actividad Humana (HAR) para prevenir enfermedades relacionadas con el sedentarismo.
+El objetivo de este análisis es identificar patrones de movimiento a partir de
+datos de acelerómetros, explorando relaciones entre variables y reduciendo la
+dimensionalidad de los datos para facilitar su agrupamiento mediante
+**K-Means**. Esto permitirá detectar segmentos de baja actividad física y
+evaluar su utilidad en el Reconocimiento de Actividad Humana (HAR) para prevenir
+enfermedades relacionadas con el sedentarismo.
 
 ## **Preprocesamiento de datos**
-
 
 ```python
 import io
@@ -43,13 +62,11 @@ from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import StandardScaler
 ```
 
-
 ```python
 dataset_url: Final[str] = (
     "https://archive.ics.uci.edu/static/public/779/harth.zip"
 )
 ```
-
 
 ```python
 response = httpx.get(
@@ -77,7 +94,6 @@ if data_dir.exists():
 with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
     zip_file.extractall("./data")
 ```
-
 
 ```python
 path = Path("./data/harth")
@@ -125,38 +141,36 @@ print(df.info())
     Archivo: data\harth\S029.csv, Tamaño: (178716, 8)
     Contenido del DataFrame después de cargar los archivos:
                     timestamp    back_x    back_y    back_z   thigh_x   thigh_y  \
-    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644   
-    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944   
-    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423   
-    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978   
-    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903   
-    
-        thigh_z  label  index  Unnamed: 0  
-    0  0.709439      6    NaN         NaN  
-    1  0.340309      6    NaN         NaN  
-    2 -0.515212      6    NaN         NaN  
-    3 -0.221140      6    NaN         NaN  
-    4 -0.653782      6    NaN         NaN  
+    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644
+    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944
+    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423
+    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978
+    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903
+
+        thigh_z  label  index  Unnamed: 0
+    0  0.709439      6    NaN         NaN
+    1  0.340309      6    NaN         NaN
+    2 -0.515212      6    NaN         NaN
+    3 -0.221140      6    NaN         NaN
+    4 -0.653782      6    NaN         NaN
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 6461328 entries, 0 to 6461327
     Data columns (total 10 columns):
-     #   Column      Dtype         
-    ---  ------      -----         
+     #   Column      Dtype
+    ---  ------      -----
      0   timestamp   datetime64[ns]
-     1   back_x      float64       
-     2   back_y      float64       
-     3   back_z      float64       
-     4   thigh_x     float64       
-     5   thigh_y     float64       
-     6   thigh_z     float64       
-     7   label       int64         
-     8   index       float64       
-     9   Unnamed: 0  float64       
+     1   back_x      float64
+     2   back_y      float64
+     3   back_z      float64
+     4   thigh_x     float64
+     5   thigh_y     float64
+     6   thigh_z     float64
+     7   label       int64
+     8   index       float64
+     9   Unnamed: 0  float64
     dtypes: datetime64[ns](1), float64(8), int64(1)
     memory usage: 493.0 MB
     None
-
-
 
 ```python
 print("Número de valores nulos en cada columna:")
@@ -176,8 +190,6 @@ print(df.isna().sum())
     Unnamed: 0    6323682
     dtype: int64
 
-
-
 ```python
 df = df.drop(columns=["Unnamed: 0", "index"], errors="ignore")  # noqa: PD901
 print(
@@ -187,8 +199,6 @@ print(
 
     Tamaño del DataFrame después de eliminar columnas no necesarias: (6461328, 8)
 
-
-
 ```python
 print(f"Tamaño antes de eliminar nulos: {df.shape}")
 df = df.dropna()  # Eliminar filas con valores nulos  # noqa: PD901
@@ -197,8 +207,6 @@ print(f"Tamaño después de eliminar nulos: {df.shape}")
 
     Tamaño antes de eliminar nulos: (6461328, 8)
     Tamaño después de eliminar nulos: (6461328, 8)
-
-
 
 ```python
 quantitative_cols = [
@@ -232,18 +240,18 @@ else:
     Tamaño del DataFrame antes de la normalización: (6461328, 8)
     Contenido del DataFrame antes de la normalización:
                     timestamp    back_x    back_y    back_z   thigh_x   thigh_y  \
-    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644   
-    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944   
-    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423   
-    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978   
-    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903   
-    
-        thigh_z  label  
-    0  0.709439      6  
-    1  0.340309      6  
-    2 -0.515212      6  
-    3 -0.221140      6  
-    4 -0.653782      6  
+    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644
+    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944
+    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423
+    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978
+    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903
+
+        thigh_z  label
+    0  0.709439      6
+    1  0.340309      6
+    2 -0.515212      6
+    3 -0.221140      6
+    4 -0.653782      6
     Contenido de las columnas a normalizar:
          back_x    back_y    back_z   thigh_x   thigh_y   thigh_z
     0 -0.760242  0.299570  0.468570 -5.092732 -0.298644  0.709439
@@ -251,8 +259,6 @@ else:
     2 -1.170922  0.186353 -0.167010 -0.035442 -0.078423 -0.515212
     3 -0.648772  0.016579 -0.054284 -1.554248 -0.950978 -0.221140
     4 -0.355071 -0.051831 -0.113419 -0.547471  0.140903 -0.653782
-
-
 
 ```python
 sns.set_theme(style="whitegrid")
@@ -295,45 +301,37 @@ print("Número de outliers detectados por IQR:", outlier_rows_iqr.shape[0])
 outlier_rows_iqr
 ```
 
-
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_14_0.png)
-    
-
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_14_0.png)
 
     Número de outliers detectados por Z-Score: 507343
                           timestamp    back_x    back_y    back_z   thigh_x  \
-    0       2019-01-12 00:00:00.000  0.330293  1.353248  1.749055 -7.181078   
-    16144   2019-01-12 00:02:43.100 -1.210939  3.050026  0.711515 -0.653571   
-    18890   2019-01-12 00:03:13.800 -0.919255  3.363959  0.687889 -0.649150   
-    20549   2019-01-12 00:03:35.410 -1.474371  4.412604  1.671156 -1.148571   
-    23333   2019-01-12 00:04:03.250 -0.886602  0.163189  1.250953 -3.329005   
-    ...                         ...       ...       ...       ...       ...   
-    6459996 2019-01-12 00:59:30.400 -1.652779  0.660400 -0.663487 -3.570954   
-    6459997 2019-01-12 00:59:30.420 -0.780554  1.381719 -1.068448 -3.534314   
-    6460051 2019-01-12 00:59:31.500 -0.461791 -0.048244 -0.160798 -4.045322   
-    6460052 2019-01-12 00:59:31.520 -0.430755  0.126012 -0.189580 -3.476626   
-    6461242 2019-01-12 00:59:55.320 -0.787019 -0.103161 -0.511542 -1.197163   
-    
-              thigh_y   thigh_z  label  
-    0       -0.822551  0.454455      6  
-    16144    0.513943 -0.950917      1  
-    18890    0.358385 -0.296835      1  
-    20549    0.652607 -0.362975      1  
-    23333    3.131830 -2.136228      1  
-    ...           ...       ...    ...  
-    6459996 -2.380443  0.808722      1  
-    6459997  1.696624 -1.552426      1  
-    6460051 -2.165495 -4.413067      1  
-    6460052 -3.895751 -4.952361      1  
-    6461242 -4.169148 -0.234375      3  
-    
+    0       2019-01-12 00:00:00.000  0.330293  1.353248  1.749055 -7.181078
+    16144   2019-01-12 00:02:43.100 -1.210939  3.050026  0.711515 -0.653571
+    18890   2019-01-12 00:03:13.800 -0.919255  3.363959  0.687889 -0.649150
+    20549   2019-01-12 00:03:35.410 -1.474371  4.412604  1.671156 -1.148571
+    23333   2019-01-12 00:04:03.250 -0.886602  0.163189  1.250953 -3.329005
+    ...                         ...       ...       ...       ...       ...
+    6459996 2019-01-12 00:59:30.400 -1.652779  0.660400 -0.663487 -3.570954
+    6459997 2019-01-12 00:59:30.420 -0.780554  1.381719 -1.068448 -3.534314
+    6460051 2019-01-12 00:59:31.500 -0.461791 -0.048244 -0.160798 -4.045322
+    6460052 2019-01-12 00:59:31.520 -0.430755  0.126012 -0.189580 -3.476626
+    6461242 2019-01-12 00:59:55.320 -0.787019 -0.103161 -0.511542 -1.197163
+
+              thigh_y   thigh_z  label
+    0       -0.822551  0.454455      6
+    16144    0.513943 -0.950917      1
+    18890    0.358385 -0.296835      1
+    20549    0.652607 -0.362975      1
+    23333    3.131830 -2.136228      1
+    ...           ...       ...    ...
+    6459996 -2.380443  0.808722      1
+    6459997  1.696624 -1.552426      1
+    6460051 -2.165495 -4.413067      1
+    6460052 -3.895751 -4.952361      1
+    6461242 -4.169148 -0.234375      3
+
     [507343 rows x 8 columns]
     Número de outliers detectados por IQR: 1399305
-
-
-
-
 
 <div>
 <style scoped>
@@ -348,6 +346,7 @@ outlier_rows_iqr
     .dataframe thead th {
         text-align: right;
     }
+
 </style>
 <table border="1" class="dataframe">
   <thead>
@@ -490,9 +489,6 @@ outlier_rows_iqr
 <p>1399305 rows × 8 columns</p>
 </div>
 
-
-
-
 ```python
 display(
     Markdown("Primeras filas del DataFrame preprocesado:"),
@@ -504,10 +500,7 @@ display(
 df.info()
 ```
 
-
 Primeras filas del DataFrame preprocesado:
-
-
 
 <div>
 <style scoped>
@@ -522,6 +515,7 @@ Primeras filas del DataFrame preprocesado:
     .dataframe thead th {
         text-align: right;
     }
+
 </style>
 <table border="1" class="dataframe">
   <thead>
@@ -597,11 +591,7 @@ Primeras filas del DataFrame preprocesado:
 </table>
 </div>
 
-
-
 Resumen estadístico del DataFrame preprocesado:
-
-
 
 <div>
 <style scoped>
@@ -616,6 +606,7 @@ Resumen estadístico del DataFrame preprocesado:
     .dataframe thead th {
         text-align: right;
     }
+
 </style>
 <table border="1" class="dataframe">
   <thead>
@@ -724,28 +715,23 @@ Resumen estadístico del DataFrame preprocesado:
 </table>
 </div>
 
-
-
 Información del DataFrame preprocesado:
-
 
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 6461328 entries, 0 to 6461327
     Data columns (total 8 columns):
-     #   Column     Dtype         
-    ---  ------     -----         
+     #   Column     Dtype
+    ---  ------     -----
      0   timestamp  datetime64[ns]
-     1   back_x     float64       
-     2   back_y     float64       
-     3   back_z     float64       
-     4   thigh_x    float64       
-     5   thigh_y    float64       
-     6   thigh_z    float64       
-     7   label      int64         
+     1   back_x     float64
+     2   back_y     float64
+     3   back_z     float64
+     4   thigh_x    float64
+     5   thigh_y    float64
+     6   thigh_z    float64
+     7   label      int64
     dtypes: datetime64[ns](1), float64(6), int64(1)
     memory usage: 394.4 MB
-
-
 
 ```python
 # Aplicar PCA para reducir a 2 dimensiones
@@ -755,7 +741,6 @@ df["PC1"] = principal_components[:, 0]
 df["PC2"] = principal_components[:, 1]
 ```
 
-
 ```python
 print(df.columns)
 ```
@@ -764,25 +749,31 @@ print(df.columns)
            'thigh_z', 'label', 'PC1', 'PC2'],
           dtype='object')
 
-
 ## **Descripción del conjunto de datos**
 
-El conjunto de datos contiene registros de acelerómetros con mediciones en diferentes ejes para la espalda (back_x, back_y, back_z) y el muslo (thigh_x, thigh_y, thigh_z), junto con una etiqueta (label) que clasifica la actividad.
+El conjunto de datos contiene registros de acelerómetros con mediciones en
+diferentes ejes para la espalda (back_x, back_y, back_z) y el muslo (thigh_x,
+thigh_y, thigh_z), junto con una etiqueta (label) que clasifica la actividad.
 
-* Se identificaron 6,461,328 registros en total.
+- Se identificaron 6,461,328 registros en total.
 
-* Se realizó un análisis exploratorio, mostrando la media cercana a 0 tras normalización, lo que sugiere datos estandarizados.
+- Se realizó un análisis exploratorio, mostrando la media cercana a 0 tras
+  normalización, lo que sugiere datos estandarizados.
 
-* Se detectaron 507,343 valores atípicos usando Z-Score, indicando posibles variaciones extremas en la actividad.
+- Se detectaron 507,343 valores atípicos usando Z-Score, indicando posibles
+  variaciones extremas en la actividad.
 
-* Se aplicó **PCA**(Análisis de Componentes Principales ) para reducir la dimensionalidad a 2 componentes principales, facilitando la visualización de patrones en los datos.
-
-
+- Se aplicó **PCA**(Análisis de Componentes Principales ) para reducir la
+  dimensionalidad a 2 componentes principales, facilitando la visualización de
+  patrones en los datos.
 
 ## **Análisis Exploratorio de Datos (EDA)**
 
-Se realizará un análisis exploratorio de los datos obtenidos por acelerómetros para identificar patrones, anomalías y relaciones entre variables mediante histogramas y matrices de correlación. Este proceso optimizará la selección de características y la normalización de los datos para aplicar clustering con K-Means de manera efectiva.
-
+Se realizará un análisis exploratorio de los datos obtenidos por acelerómetros
+para identificar patrones, anomalías y relaciones entre variables mediante
+histogramas y matrices de correlación. Este proceso optimizará la selección de
+características y la normalización de los datos para aplicar clustering con
+K-Means de manera efectiva.
 
 ```python
 df[quantitative_cols].hist(figsize=(15, 10), bins=20)
@@ -790,12 +781,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_22_0.png)
-    
-
-
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_22_0.png)
 
 ```python
 cols = 3
@@ -826,12 +812,7 @@ plt.show()
 
 ```
 
-
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_23_0.png)
-    
-
-
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
 
 ```python
 plt.figure(figsize=(8, 6))
@@ -842,12 +823,7 @@ plt.ylabel("Cantidad de Muestras")
 plt.show()
 ```
 
-
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_24_0.png)
-    
-
-
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_24_0.png)
 
 ```python
 corr_matrix = df[quantitative_cols].corr()
@@ -858,12 +834,7 @@ plt.title("Matriz de Correlación de Datos del Acelerómetro")
 plt.show()
 ```
 
-
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_25_0.png)
-    
-
-
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_25_0.png)
 
 ```python
 plt.figure(figsize=(8, 6))
@@ -877,17 +848,16 @@ plt.show()
     c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\IPython\core\pylabtools.py:170: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
       fig.canvas.print_figure(bytes_io, **kw)
 
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_26_1.png)
 
+## **Aplicación de K-Means para Clustering**
 
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_26_1.png)
-    
-
-
-##  **Aplicación de K-Means para Clustering**
-
-El clustering es una técnica de aprendizaje no supervisado que se utiliza para agrupar datos en función de sus características. En este caso, aplicaremos el algoritmo K-Means para identificar patrones en los datos del acelerómetro. El objetivo es agrupar las muestras en diferentes clústeres basados en las características cuantitativas, lo que puede ayudarnos a entender mejor las diferentes actividades representadas en el conjunto de datos.
-
+El clustering es una técnica de aprendizaje no supervisado que se utiliza para
+agrupar datos en función de sus características. En este caso, aplicaremos el
+algoritmo K-Means para identificar patrones en los datos del acelerómetro. El
+objetivo es agrupar las muestras en diferentes clústeres basados en las
+características cuantitativas, lo que puede ayudarnos a entender mejor las
+diferentes actividades representadas en el conjunto de datos.
 
 ```python
 
@@ -895,14 +865,12 @@ El clustering es una técnica de aprendizaje no supervisado que se utiliza para 
 n_clusters =4
 ```
 
-
 ```python
 # Aplicar K-Means
 kmeans = KMeans(n_clusters=n_clusters, random_state=42)
 df['cluster'] = kmeans.fit_predict(df[quantitative_cols])
 
 ```
-
 
 ```python
 # Visualizar los resultados del clustering
@@ -915,19 +883,13 @@ plt.legend(title='Cluster')
 plt.show()
 ```
 
-    C:\Users\alexr\AppData\Local\Temp\ipykernel_30276\1872158595.py:3: UserWarning: 
+    C:\Users\alexr\AppData\Local\Temp\ipykernel_30276\1872158595.py:3: UserWarning:
     The markers list has fewer values (3) than needed (12) and will cycle, which may produce an uninterpretable plot.
       sns.scatterplot(x="PC1", y="PC2", hue="cluster", data=df, palette="deep", style="label", markers=["o", "s", "D"])
     c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\IPython\core\pylabtools.py:170: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
       fig.canvas.print_figure(bytes_io, **kw)
 
-
-
-    
-![png](https://api-har.vluepixel.com/api/notebook/har_clustering_files/har_clustering_31_1.png)
-    
-
-
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_31_1.png)
 
 ```python
 # Mostrar el número de muestras en cada clúster
@@ -943,20 +905,29 @@ print(df['cluster'].value_counts())
     3     134164
     Name: count, dtype: int64
 
-
 ## **Interpretación de resultados**
 
 ### **Interpretación de los Resultados del Clustering**
 
-Se ha aplicado el algoritmo **K-Means** con **4 clústeres** sobre los datos para identificar patrones dentro del conjunto de datos. A continuación, se interpretan los resultados obtenidos:
+Se ha aplicado el algoritmo **K-Means** con **4 clústeres** sobre los datos para
+identificar patrones dentro del conjunto de datos. A continuación, se
+interpretan los resultados obtenidos:
 
 #### **1. Aplicación del Clustering**
-El modelo K-Means fue entrenado con los datos numéricos, asignando cada muestra a uno de los cuatro clústeres definidos. Esto permitió segmentar el conjunto de datos en grupos con características similares.
+
+El modelo K-Means fue entrenado con los datos numéricos, asignando cada muestra
+a uno de los cuatro clústeres definidos. Esto permitió segmentar el conjunto de
+datos en grupos con características similares.
 
 #### **2. Visualización de los Clústeres**
-El gráfico generado representa los datos en función de dos componentes principales (PC1 y PC2), facilitando su visualización en un espacio bidimensional. Cada color representa un clúster diferente, lo que permite observar cómo el algoritmo ha distribuido los datos.
+
+El gráfico generado representa los datos en función de dos componentes
+principales (PC1 y PC2), facilitando su visualización en un espacio
+bidimensional. Cada color representa un clúster diferente, lo que permite
+observar cómo el algoritmo ha distribuido los datos.
 
 #### **3. Distribución de las Muestras por Clúster**
+
 Se observó que los tamaños de los clústeres varían significativamente:
 
 - **Clúster 0:** 3,345,319 muestras.
@@ -964,49 +935,76 @@ Se observó que los tamaños de los clústeres varían significativamente:
 - **Clúster 2:** 278,541 muestras.
 - **Clúster 3:** 135,172 muestras.
 
-La diferencia en el número de muestras por clúster sugiere que los datos no están distribuidos uniformemente, lo que puede ser indicativo de estructuras o patrones particulares en los datos.
+La diferencia en el número de muestras por clúster sugiere que los datos no
+están distribuidos uniformemente, lo que puede ser indicativo de estructuras o
+patrones particulares en los datos.
 
 #### **4. Utilidad del Clustering**
-El clustering es una técnica útil para analizar datos sin etiquetas previas. En este caso, su aplicación podría ayudar a:
+
+El clustering es una técnica útil para analizar datos sin etiquetas previas. En
+este caso, su aplicación podría ayudar a:
+
 - **Identificar patrones de movimiento** en los datos del acelerómetro.
-- **Reducir la complejidad** del análisis al segmentar el conjunto de datos en grupos representativos.
-- **Detectar anomalías**, ya que los clústeres más pequeños pueden representar eventos inusuales.
+- **Reducir la complejidad** del análisis al segmentar el conjunto de datos en
+  grupos representativos.
+- **Detectar anomalías**, ya que los clústeres más pequeños pueden representar
+  eventos inusuales.
 - **Facilitar la exploración de datos** sin necesidad de etiquetas predefinidas.
 
-El uso de K-Means permitió obtener una segmentación efectiva de los datos, proporcionando información valiosa para análisis posteriores.
-
+El uso de K-Means permitió obtener una segmentación efectiva de los datos,
+proporcionando información valiosa para análisis posteriores.
 
 ## **Conclusiones y siguientes pasos**
 
 ### Conclusiones
 
-- Se confirman correlaciones en las mediciones y se demuestra la utilidad de K-Means para segmentar datos. Se sugiere evaluar si 4 clústeres es óptimo, mejorar el preprocesamiento, probar modelos avanzados como Autoencoders o CNNs, y optimizar el procesamiento de grandes volúmenes de datos.
-Eficacia de K-Means
+- Se confirman correlaciones en las mediciones y se demuestra la utilidad de
+  K-Means para segmentar datos. Se sugiere evaluar si 4 clústeres es óptimo,
+  mejorar el preprocesamiento, probar modelos avanzados como Autoencoders o
+  CNNs, y optimizar el procesamiento de grandes volúmenes de datos. Eficacia de
+  K-Means
 
-- K-Means logra segmentar los datos de aceleración en distintos grupos sin necesidad de etiquetas previas, demostrando su potencial para detectar patrones de inactividad en la vida diaria.
-Sin embargo, la selección del número de clústeres requiere mayor optimización para garantizar una segmentación más precisa.
-Impacto de la reducción de dimensionalidad
+- K-Means logra segmentar los datos de aceleración en distintos grupos sin
+  necesidad de etiquetas previas, demostrando su potencial para detectar
+  patrones de inactividad en la vida diaria. Sin embargo, la selección del
+  número de clústeres requiere mayor optimización para garantizar una
+  segmentación más precisa. Impacto de la reducción de dimensionalidad
 
-- El uso de PCA ayudó a mejorar la interpretación de los datos y facilitó la visualización de los clústeres, lo que sugiere que técnicas de reducción de dimensionalidad son clave en el preprocesamiento.
-Se podrían evaluar otras técnicas como t-SNE o UMAP para mejorar la representación de los datos.
-Diferencias en la correlación entre sensores
+- El uso de PCA ayudó a mejorar la interpretación de los datos y facilitó la
+  visualización de los clústeres, lo que sugiere que técnicas de reducción de
+  dimensionalidad son clave en el preprocesamiento. Se podrían evaluar otras
+  técnicas como t-SNE o UMAP para mejorar la representación de los datos.
+  Diferencias en la correlación entre sensores
 
-- Se identificaron correlaciones entre los sensores de la espalda y el muslo, lo que indica que la actividad del usuario afecta de manera diferente cada zona del cuerpo.
-Esto sugiere que futuros modelos podrían incorporar relaciones entre múltiples sensores para mejorar la detección de actividad.
-Limitaciones del modelo y mejoras futuras
+- Se identificaron correlaciones entre los sensores de la espalda y el muslo, lo
+  que indica que la actividad del usuario afecta de manera diferente cada zona
+  del cuerpo. Esto sugiere que futuros modelos podrían incorporar relaciones
+  entre múltiples sensores para mejorar la detección de actividad. Limitaciones
+  del modelo y mejoras futuras
 
-- K-Means, al ser un método basado en distancia, puede no capturar completamente la variabilidad en los datos de acelerometría.
-Modelos más avanzados como redes neuronales recurrentes (RNN), Autoencoders o CNNs podrían ser más efectivos en la detección de patrones complejos.
-También se podría evaluar la combinación de K-Means con técnicas supervisadas para refinar la clasificación.
-Aplicaciones prácticas y futuras investigaciones
+- K-Means, al ser un método basado en distancia, puede no capturar completamente
+  la variabilidad en los datos de acelerometría. Modelos más avanzados como
+  redes neuronales recurrentes (RNN), Autoencoders o CNNs podrían ser más
+  efectivos en la detección de patrones complejos. También se podría evaluar la
+  combinación de K-Means con técnicas supervisadas para refinar la
+  clasificación. Aplicaciones prácticas y futuras investigaciones
 
-- La detección de inactividad con este enfoque puede aplicarse en monitoreo de salud, prevención de sedentarismo y estudios de ergonomía.
-Futuros estudios podrían analizar la relación entre los clústeres y eventos específicos de inactividad, para validar la utilidad del método en entornos reales.
+- La detección de inactividad con este enfoque puede aplicarse en monitoreo de
+  salud, prevención de sedentarismo y estudios de ergonomía. Futuros estudios
+  podrían analizar la relación entre los clústeres y eventos específicos de
+  inactividad, para validar la utilidad del método en entornos reales.
 
 ### Siguientes pasos
 
-- Verificar si $k = 4$ es el valor óptimo para la aplicación de K-Means, utilizando técnicas de evaluación como el método del codo o el coeficiente de silueta.  
-- Confirmar que los valores atípicos no afectan negativamente al modelo; de ser así, replantear la estrategia de procesamiento.  
-- Explorar el uso de redes neuronales para aprovechar de forma óptima la alta dimensionalidad de los datos.  
-- Dado el elevado número de registros en el dataset, el consumo de recursos y el tiempo de procesamiento pueden volverse ineficientes. Se recomienda considerar herramientas específicas para el manejo de grandes volúmenes de datos.  
-- Identificar patrones que permitan predecir los tipos de movimientos o la actividad física y con ello darle respuesta al problema planteado.
+- Verificar si $k = 4$ es el valor óptimo para la aplicación de K-Means,
+  utilizando técnicas de evaluación como el método del codo o el coeficiente de
+  silueta.
+- Confirmar que los valores atípicos no afectan negativamente al modelo; de ser
+  así, replantear la estrategia de procesamiento.
+- Explorar el uso de redes neuronales para aprovechar de forma óptima la alta
+  dimensionalidad de los datos.
+- Dado el elevado número de registros en el dataset, el consumo de recursos y el
+  tiempo de procesamiento pueden volverse ineficientes. Se recomienda considerar
+  herramientas específicas para el manejo de grandes volúmenes de datos.
+- Identificar patrones que permitan predecir los tipos de movimientos o la
+  actividad física y con ello darle respuesta al problema planteado.

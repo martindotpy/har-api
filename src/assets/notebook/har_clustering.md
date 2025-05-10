@@ -1010,3 +1010,5 @@ Futuros estudios podrían analizar la relación entre los clústeres y eventos e
 - Explorar el uso de redes neuronales para aprovechar de forma óptima la alta dimensionalidad de los datos.  
 - Dado el elevado número de registros en el dataset, el consumo de recursos y el tiempo de procesamiento pueden volverse ineficientes. Se recomienda considerar herramientas específicas para el manejo de grandes volúmenes de datos.  
 - Identificar patrones que permitan predecir los tipos de movimientos o la actividad física y con ello darle respuesta al problema planteado.
+
+Hola mundo

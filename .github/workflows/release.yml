@@ -51,10 +51,8 @@ jobs:
           git push origin main
 
       # Deploy
-      - name: Deploy in Dokploy
-        uses: jmischler72/dokploy-deploy-actions@main
+      - name: Deploy to Dokploy
+        uses: distributhor/workflow-webhook@v3
         with:
-          PROJECT_NAME: big-data
-          APPLICATION_NAME: cliente
-          DOKPLOY_HOST: ${{ secrets.DOKPLOY_HOST }}
-          DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
+          webhook_type: "json-extended"
+          webhook_url: ${{ secrets.WEBHOOK_URL }}

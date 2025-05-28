@@ -86,12 +86,25 @@ data_dir = Path("./data")
 
 
 def remove_file_or_directory(file_or_directory: Path) -> None:
-    if file_or_directory.is_dir():
-        for file in file_or_directory.iterdir():
-            remove_file_or_directory(file)
-        file_or_directory.rmdir()
-    else:
+    """Elimina un archivo o carpeta de forma recursiva.
+
+    Args:
+        file_or_directory (Path): Ruta del archivo o carpeta a eliminar.
+
+    """
+    if not file_or_directory.exists():
+        return
+
+    if file_or_directory.is_file():
         file_or_directory.unlink()
+        return
+
+    if file_or_directory.is_dir():
+        for child in file_or_directory.iterdir():
+            remove_file_or_directory(child)
+
+        file_or_directory.rmdir()
+        return
 
 
 if data_dir.exists():

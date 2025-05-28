@@ -5,6 +5,7 @@ description = "Api para obtener la predicción del HAR (Human Activity Recogniti
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "colorlog>=6.9.0",
     "fastapi>=0.115.12",
     "pandas>=2.2.3",
     "scikit-learn>=1.6.1",

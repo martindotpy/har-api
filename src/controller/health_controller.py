@@ -6,11 +6,11 @@ health_router = APIRouter(
 
 
 @health_router.get("/health")
-def health_check() -> dict[str, str]:
+def health_check() -> str:
     """Health check endpoint.
 
     Returns:
-        dict[str, str]: A dictionary indicating the health status.
+        str: A simple ok.
 
     """
-    return {"status": "UP"}
+    return "Ok"

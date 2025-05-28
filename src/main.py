@@ -1,20 +1,23 @@
+import logging
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import DEV, HOST, ORIGINS, PATH, PORT
+from config import HOST, IS_DEV, ORIGINS, PORT, PREFIX
 from controller import routers
+from logger import configure_logger
 
 app = FastAPI(
-    docs_url=f"{PATH}/docs",
-    redoc_url=f"{PATH}/redoc",
-    openapi_url=f"{PATH}/openapi.json",
+    docs_url=f"{PREFIX}/docs",
+    redoc_url=f"{PREFIX}/redoc",
+    openapi_url=f"{PREFIX}/openapi.json",
     generate_unique_id_function=lambda path: path.name,
 )
 
 # Routers
 for router in routers:
-    app.include_router(router, prefix=PATH)
+    app.include_router(router, prefix=PREFIX)
 
 # Cors
 app.add_middleware(
@@ -25,10 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Uvicorn logger
+configure_logger(logging.getLogger("uvicorn"))
+configure_logger(logging.getLogger("uvicorn.access"))
+
+
 if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host=HOST,
-        port=PORT,
-        reload=DEV,
-    )
+    uvicorn.run("main:app", host=HOST, port=PORT, reload=IS_DEV, server_header=False)

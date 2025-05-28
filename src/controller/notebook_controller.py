@@ -1,10 +1,14 @@
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
+logger = logging.getLogger(__name__)
+
 notebook_router = APIRouter(tags=["notebook"])
-notebook_folder = Path(__file__).parent.parent / "assets" / "notebook"
+
+notebook_build_folder = Path.cwd() / "build"
 
 
 @notebook_router.get("/notebook/{file_path:path}")
@@ -18,7 +22,13 @@ def get_notebook_file(file_path: str) -> FileResponse:
         FileResponse: The notebook file response.
 
     """
-    file = notebook_folder / file_path
+    logger.info("Retrieving notebook file: %s", file_path)
+
+    # Ensure the file path is safe and does not escape the build folder
+    if ".." in file_path or file_path.startswith("/"):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+
+    file = notebook_build_folder / file_path
 
     if not file.exists() or not file.is_file():
         raise HTTPException(status_code=404, detail="File not found")

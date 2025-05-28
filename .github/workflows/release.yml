@@ -39,14 +39,14 @@ jobs:
       - name: Build the notebook
         continue-on-error: true
         run: |
-          rm -rf src/assets/notebook
+          rm -rf static
 
           uv run --no-sync --with nbconvert \
-            python -m jupyter nbconvert --to markdown src/har_clustering.ipynb \
-            --template-file src/har_clustering.md.j2 \
-            --output-dir src/assets/notebook
+            python -m jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
+            --template-file notebook/har_clustering.md.j2 \
+            --output-dir static
 
-          git add src/assets/notebook
+          git add static
           git commit -m "feat: Update notebook build"
           git push origin main
 

@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        types_or: [python, jupyter]
+        args:
+          - --fix
+          - --show-fixes
+        always_run: true
+
+      - id: ruff-format
+        types_or: [python, jupyter]
+        always_run: true
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.30
+    hooks:
+      - id: uv-export
+        always_run: true

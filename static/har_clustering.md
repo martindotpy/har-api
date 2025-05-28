@@ -1,12 +1,24 @@
 # **Hard Clustering: Análisis de Patrones de Movimiento con K-Means 📊**
 
-## 🎓 **Universidad:** Fundación Universitaria Konrad Lorenz
+<span style="font-size: 1.5rem;">
 
-### 🏫 **Facultad:** Facultad de Matemáticas e Ingenierías
+🎓 **Universidad:** Fundación Universitaria Konrad Lorenz
 
-### 📖 **Curso:** Introducción a Big Data
+</span>
 
-## **🧑‍💻 Integrantes:**
+<span style="font-size: 1.25rem;">
+
+🏫 **Facultad:** Facultad de Matemáticas e Ingenierías
+
+📖 **Curso:** Introducción a Big Data
+
+</span>
+
+<span style="font-size: 1.5rem;">
+
+**🧑‍💻 Integrantes:**
+
+</span>
 
 - Ángel Stiven Pinzón Sánchez - 506221100
 - Andrea Valentina Cubillos Pinto - 506231711

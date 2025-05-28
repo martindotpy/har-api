@@ -30,8 +30,9 @@ app.add_middleware(
 
 # Uvicorn logger
 configure_logger(logging.getLogger("uvicorn"))
-configure_logger(logging.getLogger("uvicorn.access"))
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=HOST, port=PORT, reload=IS_DEV, server_header=False)
+    uvicorn.run(
+        "main:app", host=HOST, port=PORT, reload=IS_DEV, server_header=False
+    )

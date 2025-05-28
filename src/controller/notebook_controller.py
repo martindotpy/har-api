@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 notebook_router = APIRouter(tags=["notebook"])
 
-notebook_build_folder = Path.cwd() / "build"
+notebook_static_folder = Path.cwd() / "static"
 
 
 @notebook_router.get("/notebook/{file_path:path}")
@@ -24,11 +24,13 @@ def get_notebook_file(file_path: str) -> FileResponse:
     """
     logger.info("Retrieving notebook file: %s", file_path)
 
-    # Ensure the file path is safe and does not escape the build folder
+    # Ensure the file path is safe and does not escape the static folder
     if ".." in file_path or file_path.startswith("/"):
         raise HTTPException(status_code=400, detail="Invalid file path")
 
-    file = notebook_build_folder / file_path
+    file = notebook_static_folder / file_path
+
+    logger.debug("Resolved file path: %s", file)
 
     if not file.exists() or not file.is_file():
         raise HTTPException(status_code=404, detail="File not found")

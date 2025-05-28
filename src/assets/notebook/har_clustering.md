@@ -71,9 +71,7 @@ from sklearn.discriminant_analysis import StandardScaler
 
 
 ```python
-dataset_url: Final[str] = (
-    "https://archive.ics.uci.edu/static/public/779/harth.zip"
-)
+dataset_url: Final[str] = "https://archive.ics.uci.edu/static/public/779/harth.zip"
 ```
 
 
@@ -206,9 +204,7 @@ print(df.isna().sum())
 
 ```python
 df = df.drop(columns=["Unnamed: 0", "index"], errors="ignore")
-print(
-    f"Tamaño del DataFrame después de eliminar columnas no necesarias: {df.shape}"
-)
+print(f"Tamaño del DataFrame después de eliminar columnas no necesarias: {df.shape}")
 ```
 
     Tamaño del DataFrame después de eliminar columnas no necesarias: (6461328, 8)
@@ -311,8 +307,7 @@ upper_bound = Q3 + 1.5 * IQR
 
 # Detecta outliers
 outliers_iqr = (
-    (df[quantitative_cols] < lower_bound)
-    | (df[quantitative_cols] > upper_bound)
+    (df[quantitative_cols] < lower_bound) | (df[quantitative_cols] > upper_bound)
 ).any(axis=1)
 
 # Muestra las filas que son outliers
@@ -861,7 +856,6 @@ for j in range(i + 1, len(axs)):
 
 plt.tight_layout()
 plt.show()
-
 ```
 
 
@@ -944,7 +938,6 @@ n_clusters = 4
 # Aplicar K-Means
 kmeans = KMeans(n_clusters=n_clusters, random_state=42)
 df["cluster"] = kmeans.fit_predict(df[quantitative_cols])
-
 ```
 
 
@@ -1104,7 +1097,4 @@ proporcionando información valiosa para análisis posteriores.
   herramientas específicas para el manejo de grandes volúmenes de datos.
 - Identificar patrones que permitan predecir los tipos de movimientos o la
   actividad física y con ello darle respuesta al problema planteado.
-
-
-Hola mundo
 

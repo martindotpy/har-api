@@ -7,10 +7,5 @@ health_router = APIRouter(
 
 @health_router.get("/health")
 def health_check() -> str:
-    """Health check endpoint.
-
-    Returns:
-        str: A simple ok.
-
-    """
+    """Health check endpoint."""
     return "Ok"

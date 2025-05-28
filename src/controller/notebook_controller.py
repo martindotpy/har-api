@@ -4,6 +4,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
+from error.models import HTTPError
+
 logger = logging.getLogger(__name__)
 
 notebook_router = APIRouter(tags=["notebook"])
@@ -11,17 +13,22 @@ notebook_router = APIRouter(tags=["notebook"])
 notebook_static_folder = Path.cwd() / "static"
 
 
-@notebook_router.get("/notebook/{file_path:path}")
+@notebook_router.get(
+    "/notebook/{file_path:path}",
+    responses={
+        404: {
+            "description": "File not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "File not found"},
+                }
+            },
+            "model": HTTPError,
+        },
+    },
+)
 def get_notebook_file(file_path: str) -> FileResponse:
-    """Retrieve a notebook file.
-
-    Args:
-        file_path (str): The path to the notebook file.
-
-    Returns:
-        FileResponse: The notebook file response.
-
-    """
+    """Retrieve a notebook file."""
     logger.info("Retrieving notebook file: %s", file_path)
 
     # Ensure the file path is safe and does not escape the static folder

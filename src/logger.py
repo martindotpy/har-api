@@ -3,7 +3,7 @@ import logging
 from colorlog import ColoredFormatter
 
 _asctime_color_format = "%(light_black)s%(asctime)s%(reset)s"
-_log_level_color_format = "%(log_color)s%(levelname)s%(reset)s"
+_log_level_color_format = "%(log_color)s%(levelname)-5s%(reset)s"
 _logger_name_color_format = "%(cyan)s%(name)-20s%(reset)s"
 _message_color_format = "%(message)s"
 

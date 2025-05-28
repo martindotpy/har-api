@@ -30,8 +30,6 @@ def get_notebook_file(file_path: str) -> FileResponse:
 
     file = notebook_static_folder / file_path
 
-    logger.debug("Resolved file path: %s", file)
-
     if not file.exists() or not file.is_file():
         raise HTTPException(status_code=404, detail="File not found")
 

@@ -1,4 +1,4 @@
-# **Hard Clustering: Análisis de Patrones de Movimiento con K-Means 📊**
+# **HARTH Clustering: Análisis de Patrones de Movimiento con K-Means 📊**
 
 <span style="font-size: 1.5rem;">
 
@@ -461,7 +461,7 @@ display(
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_13_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_13_0.png)
     
 
 
@@ -562,12 +562,10 @@ Información del DataFrame preprocesado:
 # Aplicar PCA para reducir a 2 dimensiones
 pca = PCA(n_components=2)
 principal_components = pca.fit_transform(df[quantitative_cols].to_arrow())
-df = df.with_columns(
-    [
-        pl.Series("PC1", principal_components[:, 0]),
-        pl.Series("PC2", principal_components[:, 1]),
-    ]
-)
+df = df.with_columns([
+    pl.Series("PC1", principal_components[:, 0]),
+    pl.Series("PC2", principal_components[:, 1]),
+])
 
 df.columns
 ```
@@ -636,7 +634,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_21_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_21_0.png)
     
 
 
@@ -674,7 +672,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_23_0.png)
     
 
 
@@ -693,7 +691,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_25_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_25_0.png)
     
 
 
@@ -712,7 +710,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_27_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_27_0.png)
     
 
 
@@ -732,7 +730,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_29_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_29_0.png)
     
 
 
@@ -822,7 +820,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_36_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_36_0.png)
     
 
 
@@ -861,14 +859,14 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_39_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_39_0.png)
     
 
 
-La gráfica del coeficiente de silueta muestra que K = 4 tiene la mejor
+La gráfica del coeficiente de silueta muestra que K = 2 tiene la mejor
 separación entre clústeres, ya que alcanza el valor más alto. Aunque el método
-del codo sugiere K = 3 como un buen punto, la silueta indica que agrupar en
-cuatro clústeres da resultados más claros.
+del codo sugiere K = 3 como un buen punto, la silueta indica que agrupar en dos
+clústeres da resultados más claros.
 
 
 ### **6.4 Clustering final con K óptimo y asignación de clusters al dataframe**
@@ -885,6 +883,7 @@ clusters = kmeans_final.fit_predict(x_scaled)
 
 # Asignar cluster a la muestra, no al dataframe completo
 df = df.with_columns([pl.Series("cluster", clusters)])
+
 ```
 
 
@@ -905,7 +904,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_43_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_43_0.png)
     
 
 
@@ -934,7 +933,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_47_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_47_0.png)
     
 
 
@@ -965,6 +964,7 @@ mlp = MLPClassifier(
     max_iter=200,  # Máximo de iteraciones
     random_state=42,  # Semilla para reproducibilidad
 )
+
 ```
 
 ### **7.2 Predicción y evaluación**
@@ -1089,9 +1089,8 @@ display(Markdown("### Resultados de Evaluación Final"))
 display(
     Markdown("""
 A continuación, se muestran resultados de evaluación:
-
-1. Reporte de clasificación (métricas de evaluación).
-2. Métricas adicionales resumidas.
+1. Reporte de clasificación (métricas de evaluación)
+2. Métricas adicionales resumidas
 """)
 )
 
@@ -1101,22 +1100,20 @@ print(classification_report(y_test, y_pred, digits=4))
 
 # Métricas resumidas en tabla
 display(Markdown("#### Métricas Principales:"))
-metrics_df = pd.DataFrame(
-    {
-        "Métrica": [
-            "Accuracy",
-            "Precision (promedio)",
-            "Recall (promedio)",
-            "F1-score (promedio)",
-        ],
-        "Valor": [
-            accuracy_score(y_test, y_pred),
-            precision_score(y_test, y_pred, average="weighted"),
-            recall_score(y_test, y_pred, average="weighted"),
-            f1_score(y_test, y_pred, average="weighted"),
-        ],
-    }
-)
+metrics_df = pd.DataFrame({
+    "Métrica": [
+        "Accuracy",
+        "Precision (promedio)",
+        "Recall (promedio)",
+        "F1-score (promedio)",
+    ],
+    "Valor": [
+        accuracy_score(y_test, y_pred),
+        precision_score(y_test, y_pred, average="weighted"),
+        recall_score(y_test, y_pred, average="weighted"),
+        f1_score(y_test, y_pred, average="weighted"),
+    ],
+})
 display(metrics_df.round(4))
 ```
 
@@ -1219,6 +1216,37 @@ A continuación, se muestran resultados de evaluación:
 </div>
 
 
+
+```python
+# Extraer métricas del classification report
+report = classification_report(y_test, y_pred, output_dict=True)
+metrics_df = (
+    pd.DataFrame(report)
+    .transpose()
+    .drop(["accuracy", "macro avg", "weighted avg"])
+)
+
+plt.figure(figsize=(14, 8))
+sns.heatmap(
+    metrics_df[["precision", "recall", "f1-score"]],
+    annot=True,
+    fmt=".3f",
+    cmap="YlGnBu",
+    linewidths=0.5,
+    cbar_kws={"label": "Score"},
+)
+plt.title("Desempeño por Clase y Métrica", fontsize=16)
+plt.xticks(rotation=45)
+plt.yticks(rotation=0)
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_58_0.png)
+    
+
+
 #### **7.3.1 Matriz de confusión: ¿Qué patrones acierta o falla el modelo?**
 
 
@@ -1234,7 +1262,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_59_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_60_0.png)
     
 
 
@@ -1263,7 +1291,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_61_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_62_0.png)
     
 
 

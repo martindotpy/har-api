@@ -1,8 +1,6 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
-build/*
-!build/mpl_model.pkl
 dist/
 wheels/
 *.egg-info

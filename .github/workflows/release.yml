@@ -24,9 +24,6 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
 
-      - name: Set up cloudflared
-        uses: AnimMouse/setup-cloudflared@v2
-
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
 

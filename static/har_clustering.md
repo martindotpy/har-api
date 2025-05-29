@@ -93,10 +93,9 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.models import Sequential
-
 ```
 
 
@@ -461,7 +460,7 @@ display(
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_13_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_13_0.png)
     
 
 
@@ -562,10 +561,12 @@ Información del DataFrame preprocesado:
 # Aplicar PCA para reducir a 2 dimensiones
 pca = PCA(n_components=2)
 principal_components = pca.fit_transform(df[quantitative_cols].to_arrow())
-df = df.with_columns([
-    pl.Series("PC1", principal_components[:, 0]),
-    pl.Series("PC2", principal_components[:, 1]),
-])
+df = df.with_columns(
+    [
+        pl.Series("PC1", principal_components[:, 0]),
+        pl.Series("PC2", principal_components[:, 1]),
+    ]
+)
 
 df.columns
 ```
@@ -631,7 +632,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_20_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_20_0.png)
     
 
 
@@ -666,7 +667,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_21_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_21_0.png)
     
 
 
@@ -682,7 +683,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_22_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_22_0.png)
     
 
 
@@ -698,7 +699,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_23_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
     
 
 
@@ -715,7 +716,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_24_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_24_0.png)
     
 
 
@@ -796,7 +797,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_28_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_28_0.png)
     
 
 
@@ -824,12 +825,11 @@ plt.ylabel("Componente Principal 2")
 plt.colorbar(label="Cluster")
 plt.grid(visible=True)
 plt.show()
-
 ```
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_29_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_29_0.png)
     
 
 
@@ -935,7 +935,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_31_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_31_0.png)
     
 
 
@@ -986,7 +986,6 @@ else:
     Markdown(
         "👍 Los valores atípicos no están afectando negativamente al modelo."
     )
-
 ```
 
     c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
@@ -1030,7 +1029,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_36_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_36_0.png)
     
 
 
@@ -1067,7 +1066,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_39_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_39_0.png)
     
 
 
@@ -1097,7 +1096,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_41_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_41_0.png)
     
 
 
@@ -1126,17 +1125,21 @@ x_train, x_test, y_train, y_test = train_test_split(
 
 ```python
 # Modelo secuencial
-model = Sequential([
-    Dense(128, activation="relu", input_shape=(x_scaled.shape[1],)),
-    Dropout(0.3),
-    Dense(64, activation="relu"),
-    Dropout(0.3),
-    Dense(32, activation="relu"),
-    Dense(
-        len(set(y_encoded)),  # salida multiclase # type: ignore  # noqa: PGH003
-        activation="softmax",
-    ),
-])
+model = Sequential(
+    [
+        Dense(128, activation="relu", input_shape=(x_scaled.shape[1],)),
+        Dropout(0.3),
+        Dense(64, activation="relu"),
+        Dropout(0.3),
+        Dense(32, activation="relu"),
+        Dense(
+            len(
+                set(y_encoded)
+            ),  # salida multiclase # type: ignore  # noqa: PGH003
+            activation="softmax",
+        ),
+    ]
+)
 
 model.compile(
     optimizer="adam",

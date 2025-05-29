@@ -35,14 +35,31 @@ jobs:
         with:
           python-version-file: .python-version
 
-      # Notebook build
-      - name: Build the notebook
+      - name: Install nbconvert
+        run: |
+          uv add --dev nbconvert
+
+      # Builds
+      - name: Model build
+        continue-on-error: true
+        run: |
+          rm -rf build
+
+          uv run jupyter nbconvert --to notebook --execute --inplace notebook/har_clustering.ipynb
+
+          git add notebook/har_clustering.ipynb
+          git commit -m "feat: Update model notebook"
+
+          git add build
+          git commit -m "feat: Update model build"
+          git push origin main
+
+      - name: Notebook build
         continue-on-error: true
         run: |
           rm -rf static
 
-          uv run --no-sync --with nbconvert \
-            python -m jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
+          uv run jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
             --template-file notebook/har_clustering.md.j2 \
             --output-dir static
 

@@ -16,53 +16,53 @@ jobs:
       url: https://api-har.martindotpy.dev
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # - name: Checkout code
+      #   uses: actions/checkout@v4
 
-      - name: Config git
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
+      # - name: Config git
+      #   run: |
+      #     git config user.name github-actions[bot]
+      #     git config user.email github-actions[bot]@users.noreply.github.com
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+      # - name: Set up uv
+      #   uses: astral-sh/setup-uv@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: .python-version
+      # - name: Set up Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version-file: .python-version
 
-      - name: Install nbconvert
-        run: |
-          uv add --dev nbconvert
+      # - name: Install nbconvert
+      #   run: |
+      #     uv add --dev nbconvert
 
       # Builds
-      - name: Model build
-        continue-on-error: true
-        run: |
-          rm -rf build
+      # - name: Model build
+      #   continue-on-error: true
+      #   run: |
+      #     rm -rf build
 
-          uv run jupyter nbconvert --to notebook --execute --inplace notebook/har_clustering.ipynb
+      #     uv run jupyter nbconvert --to notebook --execute --inplace notebook/har_clustering.ipynb
 
-          git add notebook/har_clustering.ipynb
-          git commit -m "feat: Update model notebook"
+      #     git add notebook/har_clustering.ipynb
+      #     git commit -m "feat: Update model notebook"
 
-          git add build
-          git commit -m "feat: Update model build"
-          git push origin main
+      #     git add build
+      #     git commit -m "feat: Update model build"
+      #     git push origin main
 
-      - name: Notebook build
-        continue-on-error: true
-        run: |
-          rm -rf static
+      # - name: Notebook build
+      #   continue-on-error: true
+      #   run: |
+      #     rm -rf static
 
-          uv run jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
-            --template-file notebook/har_clustering.md.j2 \
-            --output-dir static
+      #     uv run jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
+      #       --template-file notebook/har_clustering.md.j2 \
+      #       --output-dir static
 
-          git add static
-          git commit -m "feat: Update notebook build"
-          git push origin main
+      #     git add static
+      #     git commit -m "feat: Update notebook build"
+      #     git push origin main
 
       # Deploy
       - name: Deploy to Dokploy

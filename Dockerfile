@@ -1,4 +1,4 @@
-FROM python:3.13-alpine@sha256:452682e4648deafe431ad2f2391d726d7c52f0ff291be8bd4074b10379bb89ff AS builder
+FROM python:3.12-alpine@sha256:9c51ecce261773a684c8345b2d4673700055c513b4d54bc0719337d3e4ee552e AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest@sha256:3b898ca84fbe7628c5adcd836c1de78a0f1ded68344d019af8478d4358417399 /uv /bin/
 RUN apk add g++ make
@@ -14,7 +14,7 @@ RUN mkdir -p ${UV_CACHE_DIR}
 RUN --mount=type=cache,target=${UV_CACHE_DIR} \
     uv sync --no-dev
 
-FROM python:3.13-alpine@sha256:452682e4648deafe431ad2f2391d726d7c52f0ff291be8bd4074b10379bb89ff AS runtime
+FROM python:3.12-alpine@sha256:9c51ecce261773a684c8345b2d4673700055c513b4d54bc0719337d3e4ee552e AS runtime
 
 WORKDIR /app
 

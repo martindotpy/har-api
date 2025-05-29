@@ -66,35 +66,49 @@ enfermedades relacionadas con el sedentarismo.
 ```python
 import io
 import math
-import os
 import zipfile
+from inspect import cleandoc
 from pathlib import Path
 from typing import Final
 
-import httpx
+import joblib
 import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
+import polars as pl
+import requests
 import seaborn as sns
 from IPython.display import Markdown
 from scipy import stats
-from sklearn.cluster import KMeans
+from scipy.stats import zscore
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.inspection import permutation_importance
+from sklearn.manifold import TSNE
+from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential
+
 ```
 
 
 ```python
 dataset_url: Final[str] = (
-    "https://archive.ics.uci.edu/static/public/779/harth.zip"
+    "https://drive.usercontent.google.com/download?id=1pawtHobYPmvHLKKJfbg12fqkMdG5rlkL&export=download&authuser=0&confirm=t&uuid=c5110138-278c-4dc3-9be0-a11aeaefd54d&at=ALoNOgn9aAhEQRUpJf90DRNzLwiP%3A1748493341099"
 )
 ```
 
 
 ```python
-response = httpx.get(
+response = requests.get(
     dataset_url,
     timeout=10,
 )
@@ -128,118 +142,218 @@ all_files = path.glob("S0*.csv")
 
 df_list = []
 for file in all_files:
-    temp_df = pd.read_csv(file)
-    print(
-        f"Archivo: {file}, Tamaño: {temp_df.shape}"
+    temp_df = pl.read_csv(file)
+
+    # Eliminamos la columna 'Unnamed: 0' si existe y index
+    if "index" in temp_df.columns:
+        temp_df = temp_df.drop("index")
+    if "" in temp_df.columns:
+        temp_df = temp_df.drop("")
+
+    display(
+        Markdown(f"Archivo: {file}, Tamaño: {temp_df.shape}")
     )  # Imprime el tamaño de cada archivo
     df_list.append(temp_df)
 
+display(
+    Markdown(
+        f"Número total de filas en todos los archivos: {sum(df.shape[0] for df in df_list)}"
+    )
+)
+
 # Combina los DataFrames
-df = pd.concat(df_list, ignore_index=True)
-df["timestamp"] = pd.to_datetime(df["timestamp"])
+df: pl.DataFrame = pl.concat(
+    df_list,
+)
+
+# Convierte la columna timestamp a tipo datetime
+df = df.with_columns(
+    pl.col("timestamp").str.strptime(
+        pl.Datetime, "%Y-%m-%d %H:%M:%S%.f", strict=False
+    )
+)
 
 # Verifica el contenido del DataFrame después de cargar los archivos
-print("Contenido del DataFrame después de cargar los archivos:")
-print(df.head())
-print(df.info())
-```
-
-    Archivo: data\harth\S006.csv, Tamaño: (408709, 8)
-    Archivo: data\harth\S008.csv, Tamaño: (418989, 8)
-    Archivo: data\harth\S009.csv, Tamaño: (154464, 8)
-    Archivo: data\harth\S010.csv, Tamaño: (351649, 8)
-    Archivo: data\harth\S012.csv, Tamaño: (382414, 8)
-    Archivo: data\harth\S013.csv, Tamaño: (369077, 8)
-    Archivo: data\harth\S014.csv, Tamaño: (366487, 8)
-    Archivo: data\harth\S015.csv, Tamaño: (418392, 9)
-    Archivo: data\harth\S016.csv, Tamaño: (355418, 8)
-    Archivo: data\harth\S017.csv, Tamaño: (366609, 8)
-    Archivo: data\harth\S018.csv, Tamaño: (322271, 8)
-    Archivo: data\harth\S019.csv, Tamaño: (297945, 8)
-    Archivo: data\harth\S020.csv, Tamaño: (371496, 8)
-    Archivo: data\harth\S021.csv, Tamaño: (302247, 9)
-    Archivo: data\harth\S022.csv, Tamaño: (337602, 8)
-    Archivo: data\harth\S023.csv, Tamaño: (137646, 9)
-    Archivo: data\harth\S024.csv, Tamaño: (170534, 8)
-    Archivo: data\harth\S025.csv, Tamaño: (231729, 8)
-    Archivo: data\harth\S026.csv, Tamaño: (195172, 8)
-    Archivo: data\harth\S027.csv, Tamaño: (158584, 8)
-    Archivo: data\harth\S028.csv, Tamaño: (165178, 8)
-    Archivo: data\harth\S029.csv, Tamaño: (178716, 8)
-    Contenido del DataFrame después de cargar los archivos:
-                    timestamp    back_x    back_y    back_z   thigh_x   thigh_y  \
-    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644   
-    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944   
-    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423   
-    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978   
-    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903   
-    
-        thigh_z  label  index  Unnamed: 0  
-    0  0.709439      6    NaN         NaN  
-    1  0.340309      6    NaN         NaN  
-    2 -0.515212      6    NaN         NaN  
-    3 -0.221140      6    NaN         NaN  
-    4 -0.653782      6    NaN         NaN  
-    <class 'pandas.core.frame.DataFrame'>
-    RangeIndex: 6461328 entries, 0 to 6461327
-    Data columns (total 10 columns):
-     #   Column      Dtype         
-    ---  ------      -----         
-     0   timestamp   datetime64[ns]
-     1   back_x      float64       
-     2   back_y      float64       
-     3   back_z      float64       
-     4   thigh_x     float64       
-     5   thigh_y     float64       
-     6   thigh_z     float64       
-     7   label       int64         
-     8   index       float64       
-     9   Unnamed: 0  float64       
-    dtypes: datetime64[ns](1), float64(8), int64(1)
-    memory usage: 493.0 MB
-    None
-
-
-
-```python
-print("Número de valores nulos en cada columna:")
-print(df.isna().sum())
-```
-
-    Número de valores nulos en cada columna:
-    timestamp           0
-    back_x              0
-    back_y              0
-    back_z              0
-    thigh_x             0
-    thigh_y             0
-    thigh_z             0
-    label               0
-    index         5740689
-    Unnamed: 0    6323682
-    dtype: int64
-
-
-
-```python
-df = df.drop(columns=["Unnamed: 0", "index"], errors="ignore")
-print(
-    f"Tamaño del DataFrame después de eliminar columnas no necesarias: {df.shape}"
+display(
+    Markdown("Contenido del DataFrame después de cargar los archivos:"),
+    df.head(),
+    df.describe(),
+    df.schema.to_frame(),
+    Markdown(f"{df.estimated_size() / (1024 * 1024):.2f} MB"),
 )
 ```
 
-    Tamaño del DataFrame después de eliminar columnas no necesarias: (6461328, 8)
+
+Archivo: data\harth\S006.csv, Tamaño: (408709, 8)
+
+
+
+Archivo: data\harth\S008.csv, Tamaño: (418989, 8)
+
+
+
+Archivo: data\harth\S009.csv, Tamaño: (154464, 8)
+
+
+
+Archivo: data\harth\S010.csv, Tamaño: (351649, 8)
+
+
+
+Archivo: data\harth\S012.csv, Tamaño: (382414, 8)
+
+
+
+Archivo: data\harth\S013.csv, Tamaño: (369077, 8)
+
+
+
+Archivo: data\harth\S014.csv, Tamaño: (366487, 8)
+
+
+
+Archivo: data\harth\S015.csv, Tamaño: (418392, 8)
+
+
+
+Archivo: data\harth\S016.csv, Tamaño: (355418, 8)
+
+
+
+Archivo: data\harth\S017.csv, Tamaño: (366609, 8)
+
+
+
+Archivo: data\harth\S018.csv, Tamaño: (322271, 8)
+
+
+
+Archivo: data\harth\S019.csv, Tamaño: (297945, 8)
+
+
+
+Archivo: data\harth\S020.csv, Tamaño: (371496, 8)
+
+
+
+Archivo: data\harth\S021.csv, Tamaño: (302247, 8)
+
+
+
+Archivo: data\harth\S022.csv, Tamaño: (337602, 8)
+
+
+
+Archivo: data\harth\S023.csv, Tamaño: (137646, 8)
+
+
+
+Archivo: data\harth\S024.csv, Tamaño: (170534, 8)
+
+
+
+Archivo: data\harth\S025.csv, Tamaño: (231729, 8)
+
+
+
+Archivo: data\harth\S026.csv, Tamaño: (195172, 8)
+
+
+
+Archivo: data\harth\S027.csv, Tamaño: (158584, 8)
+
+
+
+Archivo: data\harth\S028.csv, Tamaño: (165178, 8)
+
+
+
+Archivo: data\harth\S029.csv, Tamaño: (178716, 8)
+
+
+
+Número total de filas en todos los archivos: 6461328
+
+
+
+Contenido del DataFrame después de cargar los archivos:
+
+
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (5, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2019-01-12 00:00:00</td><td>-0.760242</td><td>0.29957</td><td>0.46857</td><td>-5.092732</td><td>-0.298644</td><td>0.709439</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.010</td><td>-0.530138</td><td>0.28188</td><td>0.319987</td><td>0.900547</td><td>0.286944</td><td>0.340309</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.020</td><td>-1.170922</td><td>0.186353</td><td>-0.16701</td><td>-0.035442</td><td>-0.078423</td><td>-0.515212</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.030</td><td>-0.648772</td><td>0.016579</td><td>-0.054284</td><td>-1.554248</td><td>-0.950978</td><td>-0.22114</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.040</td><td>-0.355071</td><td>-0.051831</td><td>-0.113419</td><td>-0.547471</td><td>0.140903</td><td>-0.653782</td><td>6</td></tr></tbody></table></div>
+
+
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (9, 9)</small><table border="1" class="dataframe"><thead><tr><th>statistic</th><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>&quot;6461328&quot;</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td></tr><tr><td>&quot;null_count&quot;</td><td>&quot;0&quot;</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>&quot;2012-02-20 18:20:58.805005&quot;</td><td>-0.884957</td><td>-0.013261</td><td>-0.169378</td><td>-0.594888</td><td>0.020877</td><td>0.374916</td><td>6.783833</td></tr><tr><td>&quot;std&quot;</td><td>null</td><td>0.377592</td><td>0.231171</td><td>0.364738</td><td>0.626347</td><td>0.388451</td><td>0.736098</td><td>11.432381</td></tr><tr><td>&quot;min&quot;</td><td>&quot;2000-01-01 00:00:00&quot;</td><td>-8.0</td><td>-4.307617</td><td>-6.574463</td><td>-8.0</td><td>-7.997314</td><td>-8.0</td><td>1.0</td></tr><tr><td>&quot;25%&quot;</td><td>&quot;2000-01-01 01:23:47.680000&quot;</td><td>-1.002393</td><td>-0.083129</td><td>-0.37207</td><td>-0.974211</td><td>-0.100087</td><td>-0.155714</td><td>3.0</td></tr><tr><td>&quot;50%&quot;</td><td>&quot;2019-01-12 00:12:46.760000&quot;</td><td>-0.9749</td><td>0.002594</td><td>-0.137451</td><td>-0.421731</td><td>0.032629</td><td>0.700439</td><td>7.0</td></tr><tr><td>&quot;75%&quot;</td><td>&quot;2019-01-12 00:49:20.500000&quot;</td><td>-0.812303</td><td>0.07251</td><td>0.046473</td><td>-0.167876</td><td>0.154951</td><td>0.948675</td><td>7.0</td></tr><tr><td>&quot;max&quot;</td><td>&quot;2019-01-12 02:23:36.720000&quot;</td><td>2.291708</td><td>6.491943</td><td>4.909483</td><td>7.999756</td><td>7.999756</td><td>8.406235</td><td>140.0</td></tr></tbody></table></div>
+
+
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (0, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody></tbody></table></div>
+
+
+
+394.37 MB
 
 
 
 ```python
-print(f"Tamaño antes de eliminar nulos: {df.shape}")
-df = df.dropna()  # Eliminar filas con valores nulos
-print(f"Tamaño después de eliminar nulos: {df.shape}")
+display(Markdown("Número de valores nulos en cada columna:"), df.null_count())
 ```
 
-    Tamaño antes de eliminar nulos: (6461328, 8)
-    Tamaño después de eliminar nulos: (6461328, 8)
+
+Número de valores nulos en cada columna:
+
+
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (1, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
+
+
+
+```python
+display(Markdown(f"Tamaño antes de eliminar nulos: {df.shape}"))
+
+df = df.drop_nulls()  # Eliminar filas con valores nulos
+
+Markdown(f"Tamaño después de eliminar nulos: {df.shape}")
+```
+
+
+Tamaño antes de eliminar nulos: (6461328, 8)
+
+
+
+
+
+Tamaño después de eliminar nulos: (6461328, 8)
+
 
 
 
@@ -253,47 +367,45 @@ quantitative_cols = [
     "thigh_z",
 ]
 
-print(f"Tamaño del DataFrame antes de la normalización: {df.shape}")
-print("Contenido del DataFrame antes de la normalización:")
-print(df.head())
+display(
+    Markdown(
+        cleandoc(f"""
+            Tamaño del DataFrame antes de la normalización: {df.shape}
 
-# Verifica el contenido de las columnas específicas
-print("Contenido de las columnas a normalizar:")
-print(df[quantitative_cols].head())
+            Contenido del DataFrame antes de la normalización:
+        """),
+    ),
+    df.head(),
+)
 
 # Normalización
 if all(col in df.columns for col in quantitative_cols):
     if df[quantitative_cols].shape[0] > 0:
         scaler = StandardScaler()
-        df[quantitative_cols] = scaler.fit_transform(df[quantitative_cols])
+        df[quantitative_cols] = scaler.fit_transform(
+            df[quantitative_cols].to_arrow()
+        )
     else:
-        print("Las columnas seleccionadas están vacías.")
+        display(Markdown("Las columnas seleccionadas están vacías."))
 else:
-    print("Una o más columnas no existen en el DataFrame.")
+    display(Markdown("Una o más columnas no existen en el DataFrame."))
 ```
 
-    Tamaño del DataFrame antes de la normalización: (6461328, 8)
-    Contenido del DataFrame antes de la normalización:
-                    timestamp    back_x    back_y    back_z   thigh_x   thigh_y  \
-    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644   
-    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944   
-    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423   
-    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978   
-    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903   
-    
-        thigh_z  label  
-    0  0.709439      6  
-    1  0.340309      6  
-    2 -0.515212      6  
-    3 -0.221140      6  
-    4 -0.653782      6  
-    Contenido de las columnas a normalizar:
-         back_x    back_y    back_z   thigh_x   thigh_y   thigh_z
-    0 -0.760242  0.299570  0.468570 -5.092732 -0.298644  0.709439
-    1 -0.530138  0.281880  0.319987  0.900547  0.286944  0.340309
-    2 -1.170922  0.186353 -0.167010 -0.035442 -0.078423 -0.515212
-    3 -0.648772  0.016579 -0.054284 -1.554248 -0.950978 -0.221140
-    4 -0.355071 -0.051831 -0.113419 -0.547471  0.140903 -0.653782
+
+Tamaño del DataFrame antes de la normalización: (6461328, 8)
+
+Contenido del DataFrame antes de la normalización:
+
+
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (5, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2019-01-12 00:00:00</td><td>-0.760242</td><td>0.29957</td><td>0.46857</td><td>-5.092732</td><td>-0.298644</td><td>0.709439</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.010</td><td>-0.530138</td><td>0.28188</td><td>0.319987</td><td>0.900547</td><td>0.286944</td><td>0.340309</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.020</td><td>-1.170922</td><td>0.186353</td><td>-0.16701</td><td>-0.035442</td><td>-0.078423</td><td>-0.515212</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.030</td><td>-0.648772</td><td>0.016579</td><td>-0.054284</td><td>-1.554248</td><td>-0.950978</td><td>-0.22114</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.040</td><td>-0.355071</td><td>-0.051831</td><td>-0.113419</td><td>-0.547471</td><td>0.140903</td><td>-0.653782</td><td>6</td></tr></tbody></table></div>
 
 
 
@@ -313,9 +425,13 @@ abs_z_scores = abs(z_scores)
 outliers_z = (abs_z_scores > 3).any(axis=1)  # noqa: PLR2004
 
 # Muestra las filas que son outliers
-outlier_rows_z = df[outliers_z]
-print("Número de outliers detectados por Z-Score:", outlier_rows_z.shape[0])
-print(outlier_rows_z)
+outlier_rows_z = df.filter(outliers_z)
+display(
+    Markdown(
+        f"Número de outliers detectados por Z-Score: ${outlier_rows_z.shape[0]}$",
+    ),
+    outlier_rows_z,
+)
 
 # IQR (Rango Intercuartílico)
 Q1 = df[quantitative_cols].quantile(0.25)
@@ -327,212 +443,56 @@ lower_bound = Q1 - 1.5 * IQR
 upper_bound = Q3 + 1.5 * IQR
 
 # Detecta outliers
-outliers_iqr = (
-    (df[quantitative_cols] < lower_bound)
-    | (df[quantitative_cols] > upper_bound)
+outliers_iqr: list[bool] = (
+    (df[quantitative_cols].to_numpy() < lower_bound.to_numpy())
+    | (df[quantitative_cols].to_numpy() > upper_bound.to_numpy())
 ).any(axis=1)
 
+
 # Muestra las filas que son outliers
-outlier_rows_iqr = df[outliers_iqr]
-print("Número de outliers detectados por IQR:", outlier_rows_iqr.shape[0])
-outlier_rows_iqr
+outlier_rows_iqr = df.filter(outliers_iqr)
+display(
+    Markdown(
+        f"Número de outliers detectados por IQR: ${outlier_rows_iqr.shape[0]}$"
+    ),
+    outlier_rows_iqr,
+)
 ```
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_14_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_13_0.png)
     
 
 
-    Número de outliers detectados por Z-Score: 507343
-                          timestamp    back_x    back_y    back_z   thigh_x  \
-    0       2019-01-12 00:00:00.000  0.330293  1.353248  1.749055 -7.181078   
-    16144   2019-01-12 00:02:43.100 -1.210939  3.050026  0.711515 -0.653571   
-    18890   2019-01-12 00:03:13.800 -0.919255  3.363959  0.687889 -0.649150   
-    20549   2019-01-12 00:03:35.410 -1.474371  4.412604  1.671156 -1.148571   
-    23333   2019-01-12 00:04:03.250 -0.886602  0.163189  1.250953 -3.329005   
-    ...                         ...       ...       ...       ...       ...   
-    6459996 2019-01-12 00:59:30.400 -1.652779  0.660400 -0.663487 -3.570954   
-    6459997 2019-01-12 00:59:30.420 -0.780554  1.381719 -1.068448 -3.534314   
-    6460051 2019-01-12 00:59:31.500 -0.461791 -0.048244 -0.160798 -4.045322   
-    6460052 2019-01-12 00:59:31.520 -0.430755  0.126012 -0.189580 -3.476626   
-    6461242 2019-01-12 00:59:55.320 -0.787019 -0.103161 -0.511542 -1.197163   
-    
-              thigh_y   thigh_z  label  
-    0       -0.822551  0.454455      6  
-    16144    0.513943 -0.950917      1  
-    18890    0.358385 -0.296835      1  
-    20549    0.652607 -0.362975      1  
-    23333    3.131830 -2.136228      1  
-    ...           ...       ...    ...  
-    6459996 -2.380443  0.808722      1  
-    6459997  1.696624 -1.552426      1  
-    6460051 -2.165495 -4.413067      1  
-    6460052 -3.895751 -4.952361      1  
-    6461242 -4.169148 -0.234375      3  
-    
-    [507343 rows x 8 columns]
-    Número de outliers detectados por IQR: 1399305
+
+Número de outliers detectados por Z-Score: $507343$
 
 
 
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>timestamp</th>
-      <th>back_x</th>
-      <th>back_y</th>
-      <th>back_z</th>
-      <th>thigh_x</th>
-      <th>thigh_y</th>
-      <th>thigh_z</th>
-      <th>label</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2019-01-12 00:00:00.000</td>
-      <td>0.330293</td>
-      <td>1.353248</td>
-      <td>1.749055</td>
-      <td>-7.181078</td>
-      <td>-0.822551</td>
-      <td>0.454455</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2019-01-12 00:00:00.030</td>
-      <td>0.625506</td>
-      <td>0.129082</td>
-      <td>0.315552</td>
-      <td>-1.531676</td>
-      <td>-2.501871</td>
-      <td>-0.809751</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2019-01-12 00:00:00.040</td>
-      <td>1.403332</td>
-      <td>-0.166845</td>
-      <td>0.153423</td>
-      <td>0.075705</td>
-      <td>0.308988</td>
-      <td>-1.397501</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2019-01-12 00:00:00.050</td>
-      <td>1.337504</td>
-      <td>-0.359878</td>
-      <td>0.398052</td>
-      <td>-0.569856</td>
-      <td>0.542315</td>
-      <td>-1.102051</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2019-01-12 00:00:00.070</td>
-      <td>-2.238628</td>
-      <td>0.277729</td>
-      <td>0.513598</td>
-      <td>-1.314569</td>
-      <td>-0.263245</td>
-      <td>-0.586286</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>6461243</th>
-      <td>2019-01-12 00:59:55.340</td>
-      <td>-0.754690</td>
-      <td>0.538949</td>
-      <td>-0.425195</td>
-      <td>-1.462605</td>
-      <td>-2.305023</td>
-      <td>-1.132202</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6461244</th>
-      <td>2019-01-12 00:59:55.360</td>
-      <td>-0.383556</td>
-      <td>0.968782</td>
-      <td>-0.410470</td>
-      <td>-1.005387</td>
-      <td>1.599206</td>
-      <td>-1.222416</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6461245</th>
-      <td>2019-01-12 00:59:55.380</td>
-      <td>-0.118463</td>
-      <td>0.496703</td>
-      <td>-0.279943</td>
-      <td>-0.498276</td>
-      <td>1.425740</td>
-      <td>-0.844314</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6461247</th>
-      <td>2019-01-12 00:59:55.420</td>
-      <td>-0.361572</td>
-      <td>-0.211942</td>
-      <td>-0.245138</td>
-      <td>-0.674850</td>
-      <td>-1.987632</td>
-      <td>-0.729889</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6461248</th>
-      <td>2019-01-12 00:59:55.440</td>
-      <td>-0.422352</td>
-      <td>-0.068312</td>
-      <td>-0.273920</td>
-      <td>-0.641328</td>
-      <td>-1.477920</td>
-      <td>-0.417125</td>
-      <td>3</td>
-    </tr>
-  </tbody>
-</table>
-<p>1399305 rows × 8 columns</p>
-</div>
+<small>shape: (507_343, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2019-01-12 00:00:00</td><td>0.330293</td><td>1.353248</td><td>1.749055</td><td>-7.181078</td><td>-0.822551</td><td>0.454455</td><td>6</td></tr><tr><td>2019-01-12 00:02:43.100</td><td>-1.210939</td><td>3.050026</td><td>0.711515</td><td>-0.653571</td><td>0.513943</td><td>-0.950917</td><td>1</td></tr><tr><td>2019-01-12 00:03:13.800</td><td>-0.919255</td><td>3.363959</td><td>0.687889</td><td>-0.64915</td><td>0.358385</td><td>-0.296835</td><td>1</td></tr><tr><td>2019-01-12 00:03:35.410</td><td>-1.474371</td><td>4.412604</td><td>1.671156</td><td>-1.148571</td><td>0.652607</td><td>-0.362975</td><td>1</td></tr><tr><td>2019-01-12 00:04:03.250</td><td>-0.886602</td><td>0.163189</td><td>1.250953</td><td>-3.329005</td><td>3.13183</td><td>-2.136228</td><td>1</td></tr><tr><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td></tr><tr><td>2019-01-12 00:59:30.400</td><td>-1.652779</td><td>0.6604</td><td>-0.663487</td><td>-3.570954</td><td>-2.380443</td><td>0.808722</td><td>1</td></tr><tr><td>2019-01-12 00:59:30.420</td><td>-0.780554</td><td>1.381719</td><td>-1.068448</td><td>-3.534314</td><td>1.696624</td><td>-1.552426</td><td>1</td></tr><tr><td>2019-01-12 00:59:31.500</td><td>-0.461791</td><td>-0.048244</td><td>-0.160798</td><td>-4.045322</td><td>-2.165495</td><td>-4.413067</td><td>1</td></tr><tr><td>2019-01-12 00:59:31.520</td><td>-0.430755</td><td>0.126012</td><td>-0.18958</td><td>-3.476626</td><td>-3.895751</td><td>-4.952361</td><td>1</td></tr><tr><td>2019-01-12 00:59:55.320</td><td>-0.787019</td><td>-0.103161</td><td>-0.511542</td><td>-1.197163</td><td>-4.169148</td><td>-0.234375</td><td>3</td></tr></tbody></table></div>
 
+
+
+Número de outliers detectados por IQR: $1399305$
+
+
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (1_399_305, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2019-01-12 00:00:00</td><td>0.330293</td><td>1.353248</td><td>1.749055</td><td>-7.181078</td><td>-0.822551</td><td>0.454455</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.030</td><td>0.625506</td><td>0.129082</td><td>0.315552</td><td>-1.531676</td><td>-2.501871</td><td>-0.809751</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.040</td><td>1.403332</td><td>-0.166845</td><td>0.153423</td><td>0.075705</td><td>0.308988</td><td>-1.397501</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.050</td><td>1.337504</td><td>-0.359878</td><td>0.398052</td><td>-0.569856</td><td>0.542315</td><td>-1.102051</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.070</td><td>-2.238628</td><td>0.277729</td><td>0.513598</td><td>-1.314569</td><td>-0.263245</td><td>-0.586286</td><td>6</td></tr><tr><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td></tr><tr><td>2019-01-12 00:59:55.340</td><td>-0.75469</td><td>0.538949</td><td>-0.425195</td><td>-1.462605</td><td>-2.305023</td><td>-1.132202</td><td>3</td></tr><tr><td>2019-01-12 00:59:55.360</td><td>-0.383556</td><td>0.968782</td><td>-0.41047</td><td>-1.005387</td><td>1.599206</td><td>-1.222416</td><td>3</td></tr><tr><td>2019-01-12 00:59:55.380</td><td>-0.118463</td><td>0.496703</td><td>-0.279943</td><td>-0.498276</td><td>1.42574</td><td>-0.844314</td><td>3</td></tr><tr><td>2019-01-12 00:59:55.420</td><td>-0.361572</td><td>-0.211942</td><td>-0.245138</td><td>-0.67485</td><td>-1.987632</td><td>-0.729889</td><td>3</td></tr><tr><td>2019-01-12 00:59:55.440</td><td>-0.422352</td><td>-0.068312</td><td>-0.27392</td><td>-0.641328</td><td>-1.47792</td><td>-0.417125</td><td>3</td></tr></tbody></table></div>
 
 
 
@@ -543,8 +503,9 @@ display(
     Markdown("Resumen estadístico del DataFrame preprocesado:"),
     df.describe(),
     Markdown("Información del DataFrame preprocesado:"),
+    df.schema.to_frame(),
+    Markdown(f"{df.estimated_size('mb')} MB"),
 )
-df.info()
 ```
 
 
@@ -552,93 +513,14 @@ Primeras filas del DataFrame preprocesado:
 
 
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>timestamp</th>
-      <th>back_x</th>
-      <th>back_y</th>
-      <th>back_z</th>
-      <th>thigh_x</th>
-      <th>thigh_y</th>
-      <th>thigh_z</th>
-      <th>label</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2019-01-12 00:00:00.000</td>
-      <td>0.330293</td>
-      <td>1.353248</td>
-      <td>1.749055</td>
-      <td>-7.181078</td>
-      <td>-0.822551</td>
-      <td>0.454455</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2019-01-12 00:00:00.010</td>
-      <td>0.939690</td>
-      <td>1.276724</td>
-      <td>1.341687</td>
-      <td>2.387553</td>
-      <td>0.684944</td>
-      <td>-0.047014</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2019-01-12 00:00:00.020</td>
-      <td>-0.757338</td>
-      <td>0.863492</td>
-      <td>0.006493</td>
-      <td>0.893189</td>
-      <td>-0.255631</td>
-      <td>-1.209252</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2019-01-12 00:00:00.030</td>
-      <td>0.625506</td>
-      <td>0.129082</td>
-      <td>0.315552</td>
-      <td>-1.531676</td>
-      <td>-2.501871</td>
-      <td>-0.809751</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2019-01-12 00:00:00.040</td>
-      <td>1.403332</td>
-      <td>-0.166845</td>
-      <td>0.153423</td>
-      <td>0.075705</td>
-      <td>0.308988</td>
-      <td>-1.397501</td>
-      <td>6</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+<small>shape: (5, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2019-01-12 00:00:00</td><td>0.330293</td><td>1.353248</td><td>1.749055</td><td>-7.181078</td><td>-0.822551</td><td>0.454455</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.010</td><td>0.93969</td><td>1.276724</td><td>1.341687</td><td>2.387553</td><td>0.684944</td><td>-0.047014</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.020</td><td>-0.757338</td><td>0.863492</td><td>0.006493</td><td>0.893189</td><td>-0.255631</td><td>-1.209252</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.030</td><td>0.625506</td><td>0.129082</td><td>0.315552</td><td>-1.531676</td><td>-2.501871</td><td>-0.809751</td><td>6</td></tr><tr><td>2019-01-12 00:00:00.040</td><td>1.403332</td><td>-0.166845</td><td>0.153423</td><td>0.075705</td><td>0.308988</td><td>-1.397501</td><td>6</td></tr></tbody></table></div>
 
 
 
@@ -646,166 +528,62 @@ Resumen estadístico del DataFrame preprocesado:
 
 
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>timestamp</th>
-      <th>back_x</th>
-      <th>back_y</th>
-      <th>back_z</th>
-      <th>thigh_x</th>
-      <th>thigh_y</th>
-      <th>thigh_z</th>
-      <th>label</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>count</th>
-      <td>6461328</td>
-      <td>6.461328e+06</td>
-      <td>6.461328e+06</td>
-      <td>6.461328e+06</td>
-      <td>6.461328e+06</td>
-      <td>6.461328e+06</td>
-      <td>6.461328e+06</td>
-      <td>6.461328e+06</td>
-    </tr>
-    <tr>
-      <th>mean</th>
-      <td>2012-02-20 18:20:58.805005824</td>
-      <td>-3.177651e-17</td>
-      <td>1.977674e-17</td>
-      <td>5.236261e-16</td>
-      <td>-1.634220e-16</td>
-      <td>-1.349886e-16</td>
-      <td>-6.127270e-16</td>
-      <td>6.783833e+00</td>
-    </tr>
-    <tr>
-      <th>min</th>
-      <td>2000-01-01 00:00:00</td>
-      <td>-1.884322e+01</td>
-      <td>-1.857654e+01</td>
-      <td>-1.756076e+01</td>
-      <td>-1.182271e+01</td>
-      <td>-2.064145e+01</td>
-      <td>-1.137744e+01</td>
-      <td>1.000000e+00</td>
-    </tr>
-    <tr>
-      <th>25%</th>
-      <td>2000-01-01 01:23:47.680000</td>
-      <td>-3.110112e-01</td>
-      <td>-3.022347e-01</td>
-      <td>-5.557191e-01</td>
-      <td>-6.056117e-01</td>
-      <td>-3.114007e-01</td>
-      <td>-7.208682e-01</td>
-      <td>3.000000e+00</td>
-    </tr>
-    <tr>
-      <th>50%</th>
-      <td>2019-01-12 00:12:46.760000</td>
-      <td>-2.382000e-01</td>
-      <td>6.858545e-02</td>
-      <td>8.753365e-02</td>
-      <td>2.764562e-01</td>
-      <td>3.025462e-02</td>
-      <td>4.422277e-01</td>
-      <td>7.000000e+00</td>
-    </tr>
-    <tr>
-      <th>75%</th>
-      <td>2019-01-12 00:49:20.500000</td>
-      <td>1.924149e-01</td>
-      <td>3.710298e-01</td>
-      <td>5.917970e-01</td>
-      <td>6.817516e-01</td>
-      <td>3.451519e-01</td>
-      <td>7.794594e-01</td>
-      <td>7.000000e+00</td>
-    </tr>
-    <tr>
-      <th>max</th>
-      <td>2019-01-12 02:23:36.720000</td>
-      <td>8.412968e+00</td>
-      <td>2.814024e+01</td>
-      <td>1.392467e+01</td>
-      <td>1.372187e+01</td>
-      <td>2.054025e+01</td>
-      <td>1.091066e+01</td>
-      <td>1.400000e+02</td>
-    </tr>
-    <tr>
-      <th>std</th>
-      <td>NaN</td>
-      <td>1.000000e+00</td>
-      <td>1.000000e+00</td>
-      <td>1.000000e+00</td>
-      <td>1.000000e+00</td>
-      <td>1.000000e+00</td>
-      <td>1.000000e+00</td>
-      <td>1.143238e+01</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+<small>shape: (9, 9)</small><table border="1" class="dataframe"><thead><tr><th>statistic</th><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>&quot;6461328&quot;</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td><td>6.461328e6</td></tr><tr><td>&quot;null_count&quot;</td><td>&quot;0&quot;</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>&quot;2012-02-20 18:20:58.805005&quot;</td><td>-2.0081e-13</td><td>1.8051e-16</td><td>3.2458e-14</td><td>-2.7717e-15</td><td>1.1915e-14</td><td>-1.0838e-13</td><td>6.783833</td></tr><tr><td>&quot;std&quot;</td><td>null</td><td>1.0</td><td>1.0</td><td>1.0</td><td>1.0</td><td>1.0</td><td>1.0</td><td>11.432381</td></tr><tr><td>&quot;min&quot;</td><td>&quot;2000-01-01 00:00:00&quot;</td><td>-18.843224</td><td>-18.576544</td><td>-17.560763</td><td>-11.822707</td><td>-20.641445</td><td>-11.377443</td><td>1.0</td></tr><tr><td>&quot;25%&quot;</td><td>&quot;2000-01-01 01:23:47.680000&quot;</td><td>-0.311011</td><td>-0.302234</td><td>-0.555719</td><td>-0.605612</td><td>-0.311401</td><td>-0.720868</td><td>3.0</td></tr><tr><td>&quot;50%&quot;</td><td>&quot;2019-01-12 00:12:46.760000&quot;</td><td>-0.2382</td><td>0.068585</td><td>0.087534</td><td>0.276456</td><td>0.030255</td><td>0.442228</td><td>7.0</td></tr><tr><td>&quot;75%&quot;</td><td>&quot;2019-01-12 00:49:20.500000&quot;</td><td>0.192415</td><td>0.37103</td><td>0.591797</td><td>0.681751</td><td>0.345152</td><td>0.779459</td><td>7.0</td></tr><tr><td>&quot;max&quot;</td><td>&quot;2019-01-12 02:23:36.720000&quot;</td><td>8.412968</td><td>28.140243</td><td>13.924667</td><td>13.721867</td><td>20.540245</td><td>10.910662</td><td>140.0</td></tr></tbody></table></div>
 
 
 
 Información del DataFrame preprocesado:
 
 
-    <class 'pandas.core.frame.DataFrame'>
-    RangeIndex: 6461328 entries, 0 to 6461327
-    Data columns (total 8 columns):
-     #   Column     Dtype         
-    ---  ------     -----         
-     0   timestamp  datetime64[ns]
-     1   back_x     float64       
-     2   back_y     float64       
-     3   back_z     float64       
-     4   thigh_x    float64       
-     5   thigh_y    float64       
-     6   thigh_z    float64       
-     7   label      int64         
-    dtypes: datetime64[ns](1), float64(6), int64(1)
-    memory usage: 394.4 MB
+
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (0, 8)</small><table border="1" class="dataframe"><thead><tr><th>timestamp</th><th>back_x</th><th>back_y</th><th>back_z</th><th>thigh_x</th><th>thigh_y</th><th>thigh_z</th><th>label</th></tr><tr><td>datetime[μs]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody></tbody></table></div>
+
+
+
+394.3681640625 MB
 
 
 
 ```python
 # Aplicar PCA para reducir a 2 dimensiones
 pca = PCA(n_components=2)
-principal_components = pca.fit_transform(df[quantitative_cols])
-df["PC1"] = principal_components[:, 0]
-df["PC2"] = principal_components[:, 1]
+principal_components = pca.fit_transform(df[quantitative_cols].to_arrow())
+df = df.with_columns([
+    pl.Series("PC1", principal_components[:, 0]),
+    pl.Series("PC2", principal_components[:, 1]),
+])
+
+df.columns
 ```
 
 
-```python
-print(df.columns)
-```
 
-    Index(['timestamp', 'back_x', 'back_y', 'back_z', 'thigh_x', 'thigh_y',
-           'thigh_z', 'label', 'PC1', 'PC2'],
-          dtype='object')
+
+    ['timestamp',
+     'back_x',
+     'back_y',
+     'back_z',
+     'thigh_x',
+     'thigh_y',
+     'thigh_z',
+     'label',
+     'PC1',
+     'PC2']
+
 
 
 ## **Descripción del conjunto de datos**
@@ -840,14 +618,20 @@ K-Means de manera efectiva.
 
 
 ```python
-df[quantitative_cols].hist(figsize=(15, 10), bins=20)
+plt.figure(figsize=(15, 10))
+for i, col in enumerate(quantitative_cols):
+    plt.subplot(2, 3, i + 1)
+    plt.hist(df[col], bins=20)
+    plt.title(f"Histograma de {col}")
+    plt.xlabel(col)
+    plt.ylabel("Frecuencia")
 plt.tight_layout()
 plt.show()
 ```
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_22_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_20_0.png)
     
 
 
@@ -882,7 +666,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_21_0.png)
     
 
 
@@ -898,7 +682,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_24_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_22_0.png)
     
 
 
@@ -914,7 +698,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_25_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_23_0.png)
     
 
 
@@ -925,16 +709,13 @@ sns.scatterplot(x="PC1", y="PC2", hue="label", data=df, palette="deep")
 plt.title("PCA de Datos del Acelerómetro")
 plt.xlabel("Componente Principal 1")
 plt.ylabel("Componente Principal 2")
+plt.legend(loc="upper right")
 plt.show()
 ```
 
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\IPython\core\pylabtools.py:170: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
-      fig.canvas.print_figure(bytes_io, **kw)
-
-
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_26_1.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_24_0.png)
     
 
 
@@ -951,83 +732,7 @@ diferentes actividades representadas en el conjunto de datos.
 
 
 ```python
-# Definir el número de clústeres
-n_clusters = 4
-```
-
-
-```python
-# Aplicar K-Means
-kmeans = KMeans(n_clusters=n_clusters, random_state=42)
-df["cluster"] = kmeans.fit_predict(df[quantitative_cols])
-```
-
-
-```python
-# Visualizar los resultados del clustering
-plt.figure(figsize=(8, 6))
-sns.scatterplot(
-    x="PC1",
-    y="PC2",
-    hue="cluster",
-    data=df,
-    palette="deep",
-    style="label",
-    markers=["o", "s", "D"],
-)
-plt.title("Clustering K-Means de Datos del Acelerómetro")
-plt.xlabel("Componente Principal 1")
-plt.ylabel("Componente Principal 2")
-plt.legend(title="Cluster")
-plt.show()
-```
-
-    C:\Users\alexr\AppData\Local\Temp\ipykernel_20128\4154459502.py:3: UserWarning: 
-    The markers list has fewer values (3) than needed (12) and will cycle, which may produce an uninterpretable plot.
-      sns.scatterplot(
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\IPython\core\pylabtools.py:170: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
-      fig.canvas.print_figure(bytes_io, **kw)
-
-
-
-    
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_31_1.png)
-    
-
-
-
-```python
-# Mostrar el número de muestras en cada clúster
-print("Número de muestras en cada clúster:")
-print(df["cluster"].value_counts())
-```
-
-    Número de muestras en cada clúster:
-    cluster
-    1    2795979
-    2    2536244
-    0     994941
-    3     134164
-    Name: count, dtype: int64
-
-
-
-```python
-# Ruta a los archivos CSV (ajústalo a tu ruta local)
-data_dir = "./data/harth"
-
-# Cargar solo algunos archivos y pocas filas para evitar exceso de RAM
-data_frames = []
-files = [f for f in os.listdir(data_dir) if f.endswith(".csv")][:3]
-for file in files:
-    df = pd.read_csv(os.path.join(data_dir, file), nrows=10000)
-    data_frames.append(df)
-data = pd.concat(data_frames, ignore_index=True)
-```
-
-
-```python
-# Mapear etiquetas a nombres
+# Mapear etiquetas a nombres usando Polars
 label_mapping = {
     1: "walking",
     2: "running",
@@ -1042,27 +747,102 @@ label_mapping = {
     130: "cycling_sit_inactive",
     140: "cycling_stand_inactive",
 }
-data["activity"] = data["label"].map(label_mapping)
-data.dropna(subset=["activity"], inplace=True)
 
-# Seleccionar variables (puedes agregar más si deseas)
+# Agregar columna de actividad usando Polars, asegurando que sea str
+df = df.with_columns(
+    pl.col("label")
+    .map_elements(
+        lambda x: label_mapping.get(x, "unknown"), return_dtype=pl.Utf8
+    )
+    .alias("activity")
+)
+
+# Reducimos la cantidad de filas a solo una centésima parte
+size = df.shape[0] // 100
+df = df.drop_nulls(subset=["activity"]).sample(n=size, seed=42)
+
+# Seleccionar variables para el modelo
 features = ["back_x", "back_y", "back_z", "thigh_x", "thigh_y", "thigh_z"]
-X = data[features]
-y = data["activity"]
+
+
+x = df[features].to_numpy()
+y = df["activity"].to_numpy()
 ```
 
 
 ```python
 # Normalización
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+x_scaled = scaler.fit_transform(x)
 
-# Dividir datos
-X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled, y, test_size=0.2, random_state=42
+# ---- CLUSTERING CON MÉTODO DEL CODO ----
+inertia = []
+k_range = range(1, 6)  # ✅ menor rango, más rápido
+
+for k in k_range:
+    kmeans = MiniBatchKMeans(n_clusters=k, random_state=42, batch_size=1024)
+    kmeans.fit(x_scaled)
+    inertia.append(kmeans.inertia_)
+
+# Gráfica del Codo
+plt.figure(figsize=(8, 5))
+plt.plot(k_range, inertia, "bo-")
+plt.xlabel("Número de Clústeres (K)")
+plt.ylabel("Inercia")
+plt.title("Método del Codo")
+plt.grid(visible=True)
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_28_0.png)
+    
+
+
+
+```python
+# Clustering final con K óptimo
+optimal_k = 4
+kmeans_final = MiniBatchKMeans(
+    n_clusters=optimal_k, random_state=42, batch_size=1024
+)
+clusters = kmeans_final.fit_predict(x_scaled)
+
+# Asignar cluster a la muestra, no al dataframe completo
+df = df.with_columns([pl.Series("cluster", clusters)])
+
+# Visualización PCA de los clusters
+pca = PCA(n_components=2)
+x_pca = pca.fit_transform(x_scaled)
+
+plt.figure(figsize=(8, 5))
+plt.scatter(x_pca[:, 0], x_pca[:, 1], c=clusters, cmap="viridis", alpha=0.6)
+plt.title(f"Clusters KMeans con PCA ($K={optimal_k}$)")
+plt.xlabel("Componente Principal 1")
+plt.ylabel("Componente Principal 2")
+plt.colorbar(label="Cluster")
+plt.grid(visible=True)
+plt.show()
+
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_29_0.png)
+    
+
+
+
+```python
+# Asegurarse de que y viene del mismo conjunto que X_scaled
+y = df["activity"].to_numpy()
+
+# ---- CLASIFICACIÓN CON MLP ----
+x_train, x_test, y_train, y_test = train_test_split(
+    x_scaled, y, test_size=0.2, random_state=42
 )
 
-# Definir el modelo MLP
 mlp = MLPClassifier(
     hidden_layer_sizes=(64, 32),
     activation="relu",
@@ -1070,471 +850,461 @@ mlp = MLPClassifier(
     max_iter=200,
     random_state=42,
 )
-```
+mlp.fit(x_train, y_train)
 
+y_pred = mlp.predict(x_test)
 
-```python
-# Entrenar el modelo
-mlp.fit(X_train, y_train)
+display(
+    Markdown("Matriz de Confusión:"),
+    confusion_matrix(y_test, y_pred),
+    Markdown("Informe de Clasificación:"),
+)
+print(classification_report(y_test, y_pred))
 ```
 
     c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
       warnings.warn(
-
-
-
-
-
-<style>#sk-container-id-1 {
-  /* Definition of color scheme common for light and dark mode */
-  --sklearn-color-text: #000;
-  --sklearn-color-text-muted: #666;
-  --sklearn-color-line: gray;
-  /* Definition of color scheme for unfitted estimators */
-  --sklearn-color-unfitted-level-0: #fff5e6;
-  --sklearn-color-unfitted-level-1: #f6e4d2;
-  --sklearn-color-unfitted-level-2: #ffe0b3;
-  --sklearn-color-unfitted-level-3: chocolate;
-  /* Definition of color scheme for fitted estimators */
-  --sklearn-color-fitted-level-0: #f0f8ff;
-  --sklearn-color-fitted-level-1: #d4ebff;
-  --sklearn-color-fitted-level-2: #b3dbfd;
-  --sklearn-color-fitted-level-3: cornflowerblue;
-
-  /* Specific color for light theme */
-  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
-  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
-  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
-  --sklearn-color-icon: #696969;
-
-  @media (prefers-color-scheme: dark) {
-    /* Redefinition of color scheme for dark theme */
-    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
-    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
-    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
-    --sklearn-color-icon: #878787;
-  }
-}
-
-#sk-container-id-1 {
-  color: var(--sklearn-color-text);
-}
-
-#sk-container-id-1 pre {
-  padding: 0;
-}
-
-#sk-container-id-1 input.sk-hidden--visually {
-  border: 0;
-  clip: rect(1px 1px 1px 1px);
-  clip: rect(1px, 1px, 1px, 1px);
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  width: 1px;
-}
-
-#sk-container-id-1 div.sk-dashed-wrapped {
-  border: 1px dashed var(--sklearn-color-line);
-  margin: 0 0.4em 0.5em 0.4em;
-  box-sizing: border-box;
-  padding-bottom: 0.4em;
-  background-color: var(--sklearn-color-background);
-}
-
-#sk-container-id-1 div.sk-container {
-  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
-     but bootstrap.min.css set `[hidden] { display: none !important; }`
-     so we also need the `!important` here to be able to override the
-     default hidden behavior on the sphinx rendered scikit-learn.org.
-     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
-  display: inline-block !important;
-  position: relative;
-}
-
-#sk-container-id-1 div.sk-text-repr-fallback {
-  display: none;
-}
-
-div.sk-parallel-item,
-div.sk-serial,
-div.sk-item {
-  /* draw centered vertical line to link estimators */
-  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
-  background-size: 2px 100%;
-  background-repeat: no-repeat;
-  background-position: center center;
-}
-
-/* Parallel-specific style estimator block */
-
-#sk-container-id-1 div.sk-parallel-item::after {
-  content: "";
-  width: 100%;
-  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
-  flex-grow: 1;
-}
-
-#sk-container-id-1 div.sk-parallel {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  background-color: var(--sklearn-color-background);
-  position: relative;
-}
-
-#sk-container-id-1 div.sk-parallel-item {
-  display: flex;
-  flex-direction: column;
-}
-
-#sk-container-id-1 div.sk-parallel-item:first-child::after {
-  align-self: flex-end;
-  width: 50%;
-}
-
-#sk-container-id-1 div.sk-parallel-item:last-child::after {
-  align-self: flex-start;
-  width: 50%;
-}
-
-#sk-container-id-1 div.sk-parallel-item:only-child::after {
-  width: 0;
-}
-
-/* Serial-specific style estimator block */
-
-#sk-container-id-1 div.sk-serial {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: var(--sklearn-color-background);
-  padding-right: 1em;
-  padding-left: 1em;
-}
-
-
-/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
-clickable and can be expanded/collapsed.
-- Pipeline and ColumnTransformer use this feature and define the default style
-- Estimators will overwrite some part of the style using the `sk-estimator` class
-*/
-
-/* Pipeline and ColumnTransformer style (default) */
-
-#sk-container-id-1 div.sk-toggleable {
-  /* Default theme specific background. It is overwritten whether we have a
-  specific estimator or a Pipeline/ColumnTransformer */
-  background-color: var(--sklearn-color-background);
-}
-
-/* Toggleable label */
-#sk-container-id-1 label.sk-toggleable__label {
-  cursor: pointer;
-  display: flex;
-  width: 100%;
-  margin-bottom: 0;
-  padding: 0.5em;
-  box-sizing: border-box;
-  text-align: center;
-  align-items: start;
-  justify-content: space-between;
-  gap: 0.5em;
-}
-
-#sk-container-id-1 label.sk-toggleable__label .caption {
-  font-size: 0.6rem;
-  font-weight: lighter;
-  color: var(--sklearn-color-text-muted);
-}
-
-#sk-container-id-1 label.sk-toggleable__label-arrow:before {
-  /* Arrow on the left of the label */
-  content: "▸";
-  float: left;
-  margin-right: 0.25em;
-  color: var(--sklearn-color-icon);
-}
-
-#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {
-  color: var(--sklearn-color-text);
-}
-
-/* Toggleable content - dropdown */
-
-#sk-container-id-1 div.sk-toggleable__content {
-  max-height: 0;
-  max-width: 0;
-  overflow: hidden;
-  text-align: left;
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-0);
-}
-
-#sk-container-id-1 div.sk-toggleable__content.fitted {
-  /* fitted */
-  background-color: var(--sklearn-color-fitted-level-0);
-}
-
-#sk-container-id-1 div.sk-toggleable__content pre {
-  margin: 0.2em;
-  border-radius: 0.25em;
-  color: var(--sklearn-color-text);
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-0);
-}
-
-#sk-container-id-1 div.sk-toggleable__content.fitted pre {
-  /* unfitted */
-  background-color: var(--sklearn-color-fitted-level-0);
-}
-
-#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {
-  /* Expand drop-down */
-  max-height: 200px;
-  max-width: 100%;
-  overflow: auto;
-}
-
-#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
-  content: "▾";
-}
-
-/* Pipeline/ColumnTransformer-specific style */
-
-#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
-  color: var(--sklearn-color-text);
-  background-color: var(--sklearn-color-unfitted-level-2);
-}
-
-#sk-container-id-1 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
-  background-color: var(--sklearn-color-fitted-level-2);
-}
-
-/* Estimator-specific style */
-
-/* Colorize estimator box */
-#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-2);
-}
-
-#sk-container-id-1 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
-  /* fitted */
-  background-color: var(--sklearn-color-fitted-level-2);
-}
-
-#sk-container-id-1 div.sk-label label.sk-toggleable__label,
-#sk-container-id-1 div.sk-label label {
-  /* The background is the default theme color */
-  color: var(--sklearn-color-text-on-default-background);
-}
-
-/* On hover, darken the color of the background */
-#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {
-  color: var(--sklearn-color-text);
-  background-color: var(--sklearn-color-unfitted-level-2);
-}
-
-/* Label box, darken color on hover, fitted */
-#sk-container-id-1 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
-  color: var(--sklearn-color-text);
-  background-color: var(--sklearn-color-fitted-level-2);
-}
-
-/* Estimator label */
-
-#sk-container-id-1 div.sk-label label {
-  font-family: monospace;
-  font-weight: bold;
-  display: inline-block;
-  line-height: 1.2em;
-}
-
-#sk-container-id-1 div.sk-label-container {
-  text-align: center;
-}
-
-/* Estimator-specific */
-#sk-container-id-1 div.sk-estimator {
-  font-family: monospace;
-  border: 1px dotted var(--sklearn-color-border-box);
-  border-radius: 0.25em;
-  box-sizing: border-box;
-  margin-bottom: 0.5em;
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-0);
-}
-
-#sk-container-id-1 div.sk-estimator.fitted {
-  /* fitted */
-  background-color: var(--sklearn-color-fitted-level-0);
-}
-
-/* on hover */
-#sk-container-id-1 div.sk-estimator:hover {
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-2);
-}
-
-#sk-container-id-1 div.sk-estimator.fitted:hover {
-  /* fitted */
-  background-color: var(--sklearn-color-fitted-level-2);
-}
-
-/* Specification for estimator info (e.g. "i" and "?") */
-
-/* Common style for "i" and "?" */
-
-.sk-estimator-doc-link,
-a:link.sk-estimator-doc-link,
-a:visited.sk-estimator-doc-link {
-  float: right;
-  font-size: smaller;
-  line-height: 1em;
-  font-family: monospace;
-  background-color: var(--sklearn-color-background);
-  border-radius: 1em;
-  height: 1em;
-  width: 1em;
-  text-decoration: none !important;
-  margin-left: 0.5em;
-  text-align: center;
-  /* unfitted */
-  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
-  color: var(--sklearn-color-unfitted-level-1);
-}
-
-.sk-estimator-doc-link.fitted,
-a:link.sk-estimator-doc-link.fitted,
-a:visited.sk-estimator-doc-link.fitted {
-  /* fitted */
-  border: var(--sklearn-color-fitted-level-1) 1pt solid;
-  color: var(--sklearn-color-fitted-level-1);
-}
-
-/* On hover */
-div.sk-estimator:hover .sk-estimator-doc-link:hover,
-.sk-estimator-doc-link:hover,
-div.sk-label-container:hover .sk-estimator-doc-link:hover,
-.sk-estimator-doc-link:hover {
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-3);
-  color: var(--sklearn-color-background);
-  text-decoration: none;
-}
-
-div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
-.sk-estimator-doc-link.fitted:hover,
-div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
-.sk-estimator-doc-link.fitted:hover {
-  /* fitted */
-  background-color: var(--sklearn-color-fitted-level-3);
-  color: var(--sklearn-color-background);
-  text-decoration: none;
-}
-
-/* Span, style for the box shown on hovering the info icon */
-.sk-estimator-doc-link span {
-  display: none;
-  z-index: 9999;
-  position: relative;
-  font-weight: normal;
-  right: .2ex;
-  padding: .5ex;
-  margin: .5ex;
-  width: min-content;
-  min-width: 20ex;
-  max-width: 50ex;
-  color: var(--sklearn-color-text);
-  box-shadow: 2pt 2pt 4pt #999;
-  /* unfitted */
-  background: var(--sklearn-color-unfitted-level-0);
-  border: .5pt solid var(--sklearn-color-unfitted-level-3);
-}
-
-.sk-estimator-doc-link.fitted span {
-  /* fitted */
-  background: var(--sklearn-color-fitted-level-0);
-  border: var(--sklearn-color-fitted-level-3);
-}
-
-.sk-estimator-doc-link:hover span {
-  display: block;
-}
-
-/* "?"-specific style due to the `<a>` HTML tag */
-
-#sk-container-id-1 a.estimator_doc_link {
-  float: right;
-  font-size: 1rem;
-  line-height: 1em;
-  font-family: monospace;
-  background-color: var(--sklearn-color-background);
-  border-radius: 1rem;
-  height: 1rem;
-  width: 1rem;
-  text-decoration: none;
-  /* unfitted */
-  color: var(--sklearn-color-unfitted-level-1);
-  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
-}
-
-#sk-container-id-1 a.estimator_doc_link.fitted {
-  /* fitted */
-  border: var(--sklearn-color-fitted-level-1) 1pt solid;
-  color: var(--sklearn-color-fitted-level-1);
-}
-
-/* On hover */
-#sk-container-id-1 a.estimator_doc_link:hover {
-  /* unfitted */
-  background-color: var(--sklearn-color-unfitted-level-3);
-  color: var(--sklearn-color-background);
-  text-decoration: none;
-}
-
-#sk-container-id-1 a.estimator_doc_link.fitted:hover {
-  /* fitted */
-  background-color: var(--sklearn-color-fitted-level-3);
-}
-</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>MLPClassifier(hidden_layer_sizes=(64, 32), random_state=42)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>MLPClassifier</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.neural_network.MLPClassifier.html">?<span>Documentation for MLPClassifier</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>MLPClassifier(hidden_layer_sizes=(64, 32), random_state=42)</pre></div> </div></div></div></div>
-
+    
+
+
+Matriz de Confusión:
+
+
+
+    array([[ 672,   29,   11,    2,    0,    3,    1,    9,    0,    2,    8,
+              67],
+           [  31,   29,    5,    0,    0,    0,    1,    6,    0,    0,    7,
+               6],
+           [  23,    6,   59,    3,    0,    3,    0,    0,    1,    1,    5,
+              15],
+           [   4,    1,    4,    2,    0,    0,    0,    1,    0,    0,    2,
+               0],
+           [   0,    0,    0,    0,  845,    2,    0,    2,    0,    0,    0,
+               1],
+           [   3,    0,    3,    0,    3,  468,    0,    6,    1,    1,    1,
+              89],
+           [  13,    1,    1,    0,    3,    1,   65,    3,    1,    0,  251,
+             160],
+           [  10,    1,    0,    0,    1,    0,    1, 5724,    0,    0,    5,
+               7],
+           [  11,    0,    2,    0,    0,    8,    0,    0,    5,    0,    5,
+              99],
+           [  24,    1,    3,    0,    0,    3,    1,    0,    1,    8,    8,
+              94],
+           [  12,    3,    3,    0,    0,    2,   24,   12,    0,    1, 1355,
+              93],
+           [  41,    8,   17,    2,    0,   51,   56,    5,   11,    3,  200,
+            2059]])
+
+
+
+Informe de Clasificación:
+
+
+                            precision    recall  f1-score   support
+    
+               cycling_sit       0.80      0.84      0.82       804
+      cycling_sit_inactive       0.37      0.34      0.35        85
+             cycling_stand       0.55      0.51      0.53       116
+    cycling_stand_inactive       0.22      0.14      0.17        14
+                     lying       0.99      0.99      0.99       850
+                   running       0.87      0.81      0.84       575
+                 shuffling       0.44      0.13      0.20       499
+                   sitting       0.99      1.00      0.99      5749
+               stairs_down       0.25      0.04      0.07       130
+                 stairs_up       0.50      0.06      0.10       143
+                  standing       0.73      0.90      0.81      1505
+                   walking       0.77      0.84      0.80      2453
+    
+                  accuracy                           0.87     12923
+                 macro avg       0.62      0.55      0.56     12923
+              weighted avg       0.86      0.87      0.86     12923
+    
+    
+
+
+```python
+# Revisar visualmente los outliers en las características
+plt.figure(figsize=(12, 6))
+sns.boxplot(data=df[features])
+plt.title("Boxplot de características para detectar valores atípicos")
+plt.xticks(rotation=45)
+plt.grid(visible=True)
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_31_0.png)
+    
 
 
 
 ```python
-# Evaluar
-y_pred = mlp.predict(X_test)
-print("Matriz de Confusión:")
-print(confusion_matrix(y_test, y_pred))
-print("\nInforme de Clasificación:")
-print(classification_report(y_test, y_pred))
+# Clasificación con datos actuales (con outliers)
+X_train_o, X_test_o, y_train_o, y_test_o = train_test_split(
+    x_scaled, y, test_size=0.2, random_state=42
+)
+mlp.fit(X_train_o, y_train_o)
+y_pred_o = mlp.predict(X_test_o)
+acc_original = accuracy_score(y_test_o, y_pred_o)
+
+# Quitar outliers usando Z-score
+z_scores = np.abs(zscore(df[features]))
+filtered_entries = (z_scores < 3).all(axis=1)
+data_no_outliers = df.filter(filtered_entries)
+
+# Re-calcular datos
+X_clean = scaler.fit_transform(data_no_outliers[features].to_numpy())
+y_clean = data_no_outliers["activity"]
+x_train_c, x_test_c, y_train_c, y_test_c = train_test_split(
+    X_clean, y_clean, test_size=0.2, random_state=42
+)
+mlp.fit(x_train_c, y_train_c)
+y_pred_c = mlp.predict(x_test_c)
+acc_clean = accuracy_score(y_test_c, y_pred_c)
+
+# Comparar resultados
+display(
+    Markdown(
+        cleandoc(f"""
+            Accuracy con outliers: {acc_original:.4f}
+
+            Accuracy sin outliers: {acc_clean:.4f}""")
+    )
+)
+
+if acc_clean > acc_original:
+    Markdown(
+        cleandoc("""
+            ✅ Los valores atípicos estaban afectando negativamente al modelo.
+
+            👉 Es recomendable aplicar una estrategia para eliminarlos o mitigarlos.""")
+    )
+
+else:
+    Markdown(
+        "👍 Los valores atípicos no están afectando negativamente al modelo."
+    )
+
 ```
 
-    Matriz de Confusión:
-    [[1314    2   14    6   24]
-     [   3  171    0   78   20]
-     [  19    0   52    0   25]
-     [   4   30    2 3783   41]
-     [  43   33   22   33  281]]
-    
-    Informe de Clasificación:
-                  precision    recall  f1-score   support
-    
-     cycling_sit       0.95      0.97      0.96      1360
-       shuffling       0.72      0.63      0.67       272
-       stairs_up       0.58      0.54      0.56        96
-        standing       0.97      0.98      0.97      3860
-         walking       0.72      0.68      0.70       412
-    
-        accuracy                           0.93      6000
-       macro avg       0.79      0.76      0.77      6000
-    weighted avg       0.93      0.93      0.93      6000
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
+      warnings.warn(
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
+      warnings.warn(
     
 
+
+Accuracy con outliers: 0.8737
+
+Accuracy sin outliers: 0.8680
+
+
+1. Entrenamiento del modelo Nuevamente Al ya tener el modelo este puede aprender
+   patrones en los datos:
+
+
+
+```python
+mlp.fit(x_train, y_train)
+y_pred = mlp.predict(x_test)
+```
+
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
+      warnings.warn(
+    
+
+2. Matriz de confusión: ¿Qué patrones acierta o falla el modelo?
+
+
+
+```python
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=mlp.classes_)
+disp.plot(cmap="viridis", xticks_rotation=45)
+plt.title("Matriz de Confusión - MLP")
+plt.grid(visible=False)
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_36_0.png)
+    
+
+
+Interpretación:
+
+Pemite ver qué actividades físicas se predicen bien.
+
+Si por ejemplo siempre confunde walking con jogging, hay un patrón de similitud
+que puedes investigar más.
+
+
+3. Análisis de importancia de características (permutación) Esto te dice qué
+   variables (acelerómetro, giroscopio, etc.) son más importantes para predecir
+   una actividad:
+
+
+
+```python
+result = permutation_importance(
+    mlp, x_test, y_test, n_repeats=10, random_state=42
+)
+importances = result.importances_mean
+feature_names = features  # Usa tu lista de nombres de columnas
+
+# Graficar importancia de cada característica
+plt.figure(figsize=(10, 5))
+plt.barh(feature_names, importances)
+plt.xlabel("Importancia Media")
+plt.title("Importancia de características para predicción de actividad")
+plt.grid(visible=True)
+plt.tight_layout()
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_39_0.png)
+    
+
+
+4. Visualización PCA o t-SNE para detectar agrupamientos naturales Esto ayuda a
+   ver si hay patrones de agrupamiento en los movimientos:
+
+
+
+```python
+x_tsne = TSNE(n_components=2, random_state=42).fit_transform(x_scaled)
+
+plt.figure(figsize=(8, 6))
+plt.scatter(
+    x_tsne[:, 0],
+    x_tsne[:, 1],
+    c=df["activity"].cast(pl.Categorical).to_physical().to_numpy(),
+    cmap="tab10",
+    alpha=0.7,
+)
+plt.title("Visualización t-SNE de Actividades Físicas")
+plt.xlabel("Componente 1")
+plt.ylabel("Componente 2")
+plt.colorbar(label="Actividad (códigos)")
+plt.grid(visible=True)
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_41_0.png)
+    
+
+
+5. Conclusión: Relación con el problema planteado
+
+Se identificaron patrones relevantes en los sensores del dispositivo (como la
+aceleración en el eje X y el giroscopio en Z) que permiten predecir con
+precisión actividades físicas como caminar, correr o estar sentado. El modelo
+MLP alcanzó una precisión del X%, y se observaron agrupamientos claros entre
+clases similares, lo que permite implementar una solución efectiva de
+reconocimiento de actividad física en tiempo real.
+
+
+
+```python
+# Codificación de etiquetas si son categóricas
+le = LabelEncoder()
+y_encoded = le.fit_transform(y[: len(x_scaled)])
+
+# División
+x_train, x_test, y_train, y_test = train_test_split(
+    x_scaled, y_encoded, test_size=0.2, random_state=42
+)
+```
+
+
+```python
+# Modelo secuencial
+model = Sequential([
+    Dense(128, activation="relu", input_shape=(x_scaled.shape[1],)),
+    Dropout(0.3),
+    Dense(64, activation="relu"),
+    Dropout(0.3),
+    Dense(32, activation="relu"),
+    Dense(
+        len(set(y_encoded)),  # salida multiclase # type: ignore  # noqa: PGH003
+        activation="softmax",
+    ),
+])
+
+model.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
+)
+```
+
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\keras\src\layers\core\dense.py:93: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+      super().__init__(activity_regularizer=activity_regularizer, **kwargs)
+    
+
+
+```python
+# Entrenamiento
+history = model.fit(
+    x_train, y_train, epochs=25, batch_size=64, validation_split=0.2, verbose=1
+)
+```
+
+    Epoch 1/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.6189 - loss: 1.2967 - val_accuracy: 0.8138 - val_loss: 0.6079
+    Epoch 2/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.7988 - loss: 0.6496 - val_accuracy: 0.8356 - val_loss: 0.5367
+    Epoch 3/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8191 - loss: 0.5875 - val_accuracy: 0.8432 - val_loss: 0.5049
+    Epoch 4/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8296 - loss: 0.5530 - val_accuracy: 0.8491 - val_loss: 0.4894
+    Epoch 5/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8358 - loss: 0.5346 - val_accuracy: 0.8543 - val_loss: 0.4768
+    Epoch 6/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8408 - loss: 0.5122 - val_accuracy: 0.8554 - val_loss: 0.4697
+    Epoch 7/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8420 - loss: 0.5014 - val_accuracy: 0.8570 - val_loss: 0.4611
+    Epoch 8/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8426 - loss: 0.5024 - val_accuracy: 0.8574 - val_loss: 0.4587
+    Epoch 9/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8418 - loss: 0.5034 - val_accuracy: 0.8579 - val_loss: 0.4525
+    Epoch 10/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8477 - loss: 0.4829 - val_accuracy: 0.8606 - val_loss: 0.4513
+    Epoch 11/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8523 - loss: 0.4750 - val_accuracy: 0.8570 - val_loss: 0.4553
+    Epoch 12/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8511 - loss: 0.4743 - val_accuracy: 0.8629 - val_loss: 0.4446
+    Epoch 13/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8476 - loss: 0.4711 - val_accuracy: 0.8640 - val_loss: 0.4410
+    Epoch 14/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8528 - loss: 0.4649 - val_accuracy: 0.8626 - val_loss: 0.4374
+    Epoch 15/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8534 - loss: 0.4655 - val_accuracy: 0.8656 - val_loss: 0.4331
+    Epoch 16/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8538 - loss: 0.4592 - val_accuracy: 0.8633 - val_loss: 0.4377
+    Epoch 17/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8531 - loss: 0.4641 - val_accuracy: 0.8642 - val_loss: 0.4317
+    Epoch 18/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8545 - loss: 0.4599 - val_accuracy: 0.8641 - val_loss: 0.4323
+    Epoch 19/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8557 - loss: 0.4574 - val_accuracy: 0.8631 - val_loss: 0.4332
+    Epoch 20/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8587 - loss: 0.4492 - val_accuracy: 0.8643 - val_loss: 0.4326
+    Epoch 21/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8583 - loss: 0.4477 - val_accuracy: 0.8657 - val_loss: 0.4242
+    Epoch 22/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8581 - loss: 0.4537 - val_accuracy: 0.8675 - val_loss: 0.4261
+    Epoch 23/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8556 - loss: 0.4545 - val_accuracy: 0.8652 - val_loss: 0.4262
+    Epoch 24/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8570 - loss: 0.4476 - val_accuracy: 0.8633 - val_loss: 0.4288
+    Epoch 25/25
+    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8552 - loss: 0.4455 - val_accuracy: 0.8653 - val_loss: 0.4279
+    
+
+
+```python
+# Evaluación
+y_pred = model.predict(x_test)
+y_pred_labels = y_pred.argmax(axis=1)
+
+display(
+    Markdown("Matriz de Confusión:"),
+    confusion_matrix(y_test, y_pred_labels),
+    Markdown("Informe de Clasificación:"),
+)
+print(classification_report(y_test, y_pred_labels))
+```
+
+    [1m404/404[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 520us/step
+    
+
+
+Matriz de Confusión:
+
+
+
+    array([[ 717,    0,    1,    0,    0,    2,    0,   14,    0,    0,    9,
+              61],
+           [  63,    0,    2,    0,    1,    0,    0,    6,    0,    0,   11,
+               2],
+           [  57,    0,   31,    0,    0,    1,    0,    0,    0,    0,    6,
+              21],
+           [  12,    0,    0,    0,    0,    0,    0,    1,    0,    0,    1,
+               0],
+           [   1,    0,    0,    0,  844,    0,    0,    2,    0,    0,    0,
+               3],
+           [   7,    0,    2,    0,    7,  427,    0,    9,    0,    0,    5,
+             118],
+           [  14,    0,    0,    0,    2,    1,    7,    3,    0,    0,  268,
+             204],
+           [  17,    0,    0,    0,    2,    0,    0, 5720,    0,    0,    3,
+               7],
+           [  16,    0,    1,    0,    0,   11,    0,    0,    0,    0,    6,
+              96],
+           [  42,    0,    3,    0,    0,    0,    0,    1,    0,    0,   11,
+              86],
+           [  22,    1,    0,    0,    0,    2,    4,   14,    0,    0, 1355,
+             107],
+           [  75,    0,   11,    0,    0,   29,    2,    7,    0,    0,  215,
+            2114]])
+
+
+
+Informe de Clasificación:
+
+
+                  precision    recall  f1-score   support
+    
+               0       0.69      0.89      0.78       804
+               1       0.00      0.00      0.00        85
+               2       0.61      0.27      0.37       116
+               3       0.00      0.00      0.00        14
+               4       0.99      0.99      0.99       850
+               5       0.90      0.74      0.81       575
+               6       0.54      0.01      0.03       499
+               7       0.99      0.99      0.99      5749
+               8       0.00      0.00      0.00       130
+               9       0.00      0.00      0.00       143
+              10       0.72      0.90      0.80      1505
+              11       0.75      0.86      0.80      2453
+    
+        accuracy                           0.87     12923
+       macro avg       0.51      0.47      0.46     12923
+    weighted avg       0.84      0.87      0.84     12923
+    
+    
+
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\metrics\_classification.py:1565: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+      _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\metrics\_classification.py:1565: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+      _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\metrics\_classification.py:1565: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+      _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
+    
+
+Finalmente, compilamos el modelo para su uso dentro de la aplicación rest.
+
+
+
+```python
+build_path = Path("..", "build")
+
+if build_path.exists():
+    remove_file_or_directory(build_path)
+
+build_path.mkdir(parents=True, exist_ok=True)
+
+joblib.dump(mlp, build_path / "mlp_model.pkl")
+None
+```
 
 ## **Interpretación de resultados**
 

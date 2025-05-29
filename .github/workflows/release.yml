@@ -56,9 +56,9 @@ jobs:
       #   run: |
       #     rm -rf static
 
-      #     uv run jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
-      #       --template-file notebook/har_clustering.md.j2 \
-      #       --output-dir static
+          # uv run jupyter nbconvert --to markdown notebook/har_clustering.ipynb \
+          #   --template-file notebook/har_clustering.md.j2 \
+          #   --output-dir static
 
       #     git add static
       #     git commit -m "feat: Update notebook build"

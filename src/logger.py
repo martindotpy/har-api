@@ -47,4 +47,8 @@ def configure_logger(logger: logging.Logger) -> None:
         logger (logging.Logger): The logger to configure.
 
     """
+    # Remove all existing handlers
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+
     logger.addHandler(_stream_handler)

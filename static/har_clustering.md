@@ -83,7 +83,9 @@ from sklearn.discriminant_analysis import StandardScaler
 
 
 ```python
-dataset_url: Final[str] = "https://archive.ics.uci.edu/static/public/779/harth.zip"
+dataset_url: Final[str] = (
+    "https://archive.ics.uci.edu/static/public/779/harth.zip"
+)
 ```
 
 
@@ -98,25 +100,12 @@ data_dir = Path("./data")
 
 
 def remove_file_or_directory(file_or_directory: Path) -> None:
-    """Elimina un archivo o carpeta de forma recursiva.
-
-    Args:
-        file_or_directory (Path): Ruta del archivo o carpeta a eliminar.
-
-    """
-    if not file_or_directory.exists():
-        return
-
-    if file_or_directory.is_file():
-        file_or_directory.unlink()
-        return
-
     if file_or_directory.is_dir():
-        for child in file_or_directory.iterdir():
-            remove_file_or_directory(child)
-
+        for file in file_or_directory.iterdir():
+            remove_file_or_directory(file)
         file_or_directory.rmdir()
-        return
+    else:
+        file_or_directory.unlink()
 
 
 if data_dir.exists():
@@ -150,42 +139,42 @@ print(df.head())
 print(df.info())
 ```
 
-    Archivo: data\harth\S006.csv, Tamaño: (408709, 8)
-    Archivo: data\harth\S008.csv, Tamaño: (418989, 8)
-    Archivo: data\harth\S009.csv, Tamaño: (154464, 8)
-    Archivo: data\harth\S010.csv, Tamaño: (351649, 8)
-    Archivo: data\harth\S012.csv, Tamaño: (382414, 8)
-    Archivo: data\harth\S013.csv, Tamaño: (369077, 8)
-    Archivo: data\harth\S014.csv, Tamaño: (366487, 8)
-    Archivo: data\harth\S015.csv, Tamaño: (418392, 9)
-    Archivo: data\harth\S016.csv, Tamaño: (355418, 8)
-    Archivo: data\harth\S017.csv, Tamaño: (366609, 8)
-    Archivo: data\harth\S018.csv, Tamaño: (322271, 8)
-    Archivo: data\harth\S019.csv, Tamaño: (297945, 8)
-    Archivo: data\harth\S020.csv, Tamaño: (371496, 8)
-    Archivo: data\harth\S021.csv, Tamaño: (302247, 9)
-    Archivo: data\harth\S022.csv, Tamaño: (337602, 8)
-    Archivo: data\harth\S023.csv, Tamaño: (137646, 9)
-    Archivo: data\harth\S024.csv, Tamaño: (170534, 8)
-    Archivo: data\harth\S025.csv, Tamaño: (231729, 8)
-    Archivo: data\harth\S026.csv, Tamaño: (195172, 8)
-    Archivo: data\harth\S027.csv, Tamaño: (158584, 8)
-    Archivo: data\harth\S028.csv, Tamaño: (165178, 8)
-    Archivo: data\harth\S029.csv, Tamaño: (178716, 8)
+    Archivo: data/harth/S026.csv, Tamaño: (195172, 8)
+    Archivo: data/harth/S013.csv, Tamaño: (369077, 8)
+    Archivo: data/harth/S009.csv, Tamaño: (154464, 8)
+    Archivo: data/harth/S022.csv, Tamaño: (337602, 8)
+    Archivo: data/harth/S027.csv, Tamaño: (158584, 8)
+    Archivo: data/harth/S006.csv, Tamaño: (408709, 8)
+    Archivo: data/harth/S025.csv, Tamaño: (231729, 8)
+    Archivo: data/harth/S024.csv, Tamaño: (170534, 8)
+    Archivo: data/harth/S015.csv, Tamaño: (418392, 9)
+    Archivo: data/harth/S018.csv, Tamaño: (322271, 8)
+    Archivo: data/harth/S029.csv, Tamaño: (178716, 8)
+    Archivo: data/harth/S021.csv, Tamaño: (302247, 9)
+    Archivo: data/harth/S020.csv, Tamaño: (371496, 8)
+    Archivo: data/harth/S014.csv, Tamaño: (366487, 8)
+    Archivo: data/harth/S017.csv, Tamaño: (366609, 8)
+    Archivo: data/harth/S019.csv, Tamaño: (297945, 8)
+    Archivo: data/harth/S008.csv, Tamaño: (418989, 8)
+    Archivo: data/harth/S010.csv, Tamaño: (351649, 8)
+    Archivo: data/harth/S023.csv, Tamaño: (137646, 9)
+    Archivo: data/harth/S012.csv, Tamaño: (382414, 8)
+    Archivo: data/harth/S016.csv, Tamaño: (355418, 8)
+    Archivo: data/harth/S028.csv, Tamaño: (165178, 8)
     Contenido del DataFrame después de cargar los archivos:
                     timestamp    back_x    back_y    back_z   thigh_x   thigh_y  \
-    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644   
-    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944   
-    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423   
-    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978   
-    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903   
+    0 2019-01-12 00:00:00.000 -0.306885 -0.724121 -0.303223 -4.640381 -0.521240   
+    1 2019-01-12 00:00:00.020 -0.979980 -0.288574 -0.335693  1.295166 -1.836670   
+    2 2019-01-12 00:00:00.040 -1.367920  0.059814 -0.255371 -0.798584 -0.893799   
+    3 2019-01-12 00:00:00.060 -0.915039 -0.089355 -0.291016 -1.010010  0.139648   
+    4 2019-01-12 00:00:00.080 -0.539795 -0.039307 -0.209717 -1.092529  0.860596   
     
         thigh_z  label  index  Unnamed: 0  
-    0  0.709439      6    NaN         NaN  
-    1  0.340309      6    NaN         NaN  
-    2 -0.515212      6    NaN         NaN  
-    3 -0.221140      6    NaN         NaN  
-    4 -0.653782      6    NaN         NaN  
+    0 -1.580811      6    NaN         NaN  
+    1 -0.389893      6    NaN         NaN  
+    2  0.170898      6    NaN         NaN  
+    3  0.002930      6    NaN         NaN  
+    4  0.000000      6    NaN         NaN  
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 6461328 entries, 0 to 6461327
     Data columns (total 10 columns):
@@ -229,7 +218,9 @@ print(df.isna().sum())
 
 ```python
 df = df.drop(columns=["Unnamed: 0", "index"], errors="ignore")
-print(f"Tamaño del DataFrame después de eliminar columnas no necesarias: {df.shape}")
+print(
+    f"Tamaño del DataFrame después de eliminar columnas no necesarias: {df.shape}"
+)
 ```
 
     Tamaño del DataFrame después de eliminar columnas no necesarias: (6461328, 8)
@@ -279,25 +270,25 @@ else:
     Tamaño del DataFrame antes de la normalización: (6461328, 8)
     Contenido del DataFrame antes de la normalización:
                     timestamp    back_x    back_y    back_z   thigh_x   thigh_y  \
-    0 2019-01-12 00:00:00.000 -0.760242  0.299570  0.468570 -5.092732 -0.298644   
-    1 2019-01-12 00:00:00.010 -0.530138  0.281880  0.319987  0.900547  0.286944   
-    2 2019-01-12 00:00:00.020 -1.170922  0.186353 -0.167010 -0.035442 -0.078423   
-    3 2019-01-12 00:00:00.030 -0.648772  0.016579 -0.054284 -1.554248 -0.950978   
-    4 2019-01-12 00:00:00.040 -0.355071 -0.051831 -0.113419 -0.547471  0.140903   
+    0 2019-01-12 00:00:00.000 -0.306885 -0.724121 -0.303223 -4.640381 -0.521240   
+    1 2019-01-12 00:00:00.020 -0.979980 -0.288574 -0.335693  1.295166 -1.836670   
+    2 2019-01-12 00:00:00.040 -1.367920  0.059814 -0.255371 -0.798584 -0.893799   
+    3 2019-01-12 00:00:00.060 -0.915039 -0.089355 -0.291016 -1.010010  0.139648   
+    4 2019-01-12 00:00:00.080 -0.539795 -0.039307 -0.209717 -1.092529  0.860596   
     
         thigh_z  label  
-    0  0.709439      6  
-    1  0.340309      6  
-    2 -0.515212      6  
-    3 -0.221140      6  
-    4 -0.653782      6  
+    0 -1.580811      6  
+    1 -0.389893      6  
+    2  0.170898      6  
+    3  0.002930      6  
+    4  0.000000      6  
     Contenido de las columnas a normalizar:
          back_x    back_y    back_z   thigh_x   thigh_y   thigh_z
-    0 -0.760242  0.299570  0.468570 -5.092732 -0.298644  0.709439
-    1 -0.530138  0.281880  0.319987  0.900547  0.286944  0.340309
-    2 -1.170922  0.186353 -0.167010 -0.035442 -0.078423 -0.515212
-    3 -0.648772  0.016579 -0.054284 -1.554248 -0.950978 -0.221140
-    4 -0.355071 -0.051831 -0.113419 -0.547471  0.140903 -0.653782
+    0 -0.306885 -0.724121 -0.303223 -4.640381 -0.521240 -1.580811
+    1 -0.979980 -0.288574 -0.335693  1.295166 -1.836670 -0.389893
+    2 -1.367920  0.059814 -0.255371 -0.798584 -0.893799  0.170898
+    3 -0.915039 -0.089355 -0.291016 -1.010010  0.139648  0.002930
+    4 -0.539795 -0.039307 -0.209717 -1.092529  0.860596  0.000000
 
 
 
@@ -332,7 +323,8 @@ upper_bound = Q3 + 1.5 * IQR
 
 # Detecta outliers
 outliers_iqr = (
-    (df[quantitative_cols] < lower_bound) | (df[quantitative_cols] > upper_bound)
+    (df[quantitative_cols] < lower_bound)
+    | (df[quantitative_cols] > upper_bound)
 ).any(axis=1)
 
 # Muestra las filas que son outliers
@@ -349,30 +341,30 @@ outlier_rows_iqr
 
     Número de outliers detectados por Z-Score: 507343
                           timestamp    back_x    back_y    back_z   thigh_x  \
-    0       2019-01-12 00:00:00.000  0.330293  1.353248  1.749055 -7.181078   
-    16144   2019-01-12 00:02:43.100 -1.210939  3.050026  0.711515 -0.653571   
-    18890   2019-01-12 00:03:13.800 -0.919255  3.363959  0.687889 -0.649150   
-    20549   2019-01-12 00:03:35.410 -1.474371  4.412604  1.671156 -1.148571   
-    23333   2019-01-12 00:04:03.250 -0.886602  0.163189  1.250953 -3.329005   
+    0       2019-01-12 00:00:00.000  1.530946 -3.075040 -0.366962 -6.458873   
+    1       2019-01-12 00:00:00.020 -0.251654 -1.190949 -0.455985  3.017585   
+    379     2019-01-12 00:00:07.580 -0.829045 -0.162303  0.211365 -3.605254   
+    383     2019-01-12 00:00:07.660 -0.652532 -1.481379 -0.522920 -3.046693   
+    386     2019-01-12 00:00:07.720 -0.635074 -1.089565 -0.805391  0.848040   
     ...                         ...       ...       ...       ...       ...   
-    6459996 2019-01-12 00:59:30.400 -1.652779  0.660400 -0.663487 -3.570954   
-    6459997 2019-01-12 00:59:30.420 -0.780554  1.381719 -1.068448 -3.534314   
-    6460051 2019-01-12 00:59:31.500 -0.461791 -0.048244 -0.160798 -4.045322   
-    6460052 2019-01-12 00:59:31.520 -0.430755  0.126012 -0.189580 -3.476626   
-    6461242 2019-01-12 00:59:55.320 -0.787019 -0.103161 -0.511542 -1.197163   
+    6460921 2019-01-12 00:55:37.740 -0.801243 -0.556232 -0.755188 -1.453640   
+    6460975 2019-01-12 00:55:38.820 -1.351478  0.650896 -1.298706 -3.105550   
+    6460981 2019-01-12 00:55:38.940 -0.457912 -0.517153 -0.905795 -1.514837   
+    6461034 2019-01-12 00:55:40.000 -0.018243 -0.099994 -0.067758 -2.004018   
+    6461189 2019-01-12 00:55:43.100 -1.578424 -1.095902 -0.638052 -1.452861   
     
               thigh_y   thigh_z  label  
-    0       -0.822551  0.454455      6  
-    16144    0.513943 -0.950917      1  
-    18890    0.358385 -0.296835      1  
-    20549    0.652607 -0.362975      1  
-    23333    3.131830 -2.136228      1  
+    0       -1.395586 -2.656883      6  
+    1       -4.781933 -1.039004      6  
+    379     -1.609903 -5.243565      1  
+    383     -2.798393 -0.123598      1  
+    386      3.887567  1.413354      1  
     ...           ...       ...    ...  
-    6459996 -2.380443  0.808722      1  
-    6459997  1.696624 -1.552426      1  
-    6460051 -2.165495 -4.413067      1  
-    6460052 -3.895751 -4.952361      1  
-    6461242 -4.169148 -0.234375      3  
+    6460921 -3.279195 -0.516294      1  
+    6460975 -1.355990 -3.128847      1  
+    6460981 -3.049792 -0.678480      1  
+    6461034 -1.042998 -3.762665      1  
+    6461189  0.573497 -3.467149      4  
     
     [507343 rows x 8 columns]
     Número de outliers detectados por IQR: 1399305
@@ -381,7 +373,9 @@ outlier_rows_iqr
 
 
 
-<div>
+
+  <div id="df-19a1a838-e024-4fa1-b7c6-584ed2b00b3d" class="colab-df-container">
+    <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -413,56 +407,56 @@ outlier_rows_iqr
     <tr>
       <th>0</th>
       <td>2019-01-12 00:00:00.000</td>
-      <td>0.330293</td>
-      <td>1.353248</td>
-      <td>1.749055</td>
-      <td>-7.181078</td>
-      <td>-0.822551</td>
-      <td>0.454455</td>
+      <td>1.530946</td>
+      <td>-3.075040</td>
+      <td>-0.366962</td>
+      <td>-6.458873</td>
+      <td>-1.395586</td>
+      <td>-2.656883</td>
       <td>6</td>
     </tr>
     <tr>
-      <th>3</th>
-      <td>2019-01-12 00:00:00.030</td>
-      <td>0.625506</td>
-      <td>0.129082</td>
-      <td>0.315552</td>
-      <td>-1.531676</td>
-      <td>-2.501871</td>
-      <td>-0.809751</td>
+      <th>1</th>
+      <td>2019-01-12 00:00:00.020</td>
+      <td>-0.251654</td>
+      <td>-1.190949</td>
+      <td>-0.455985</td>
+      <td>3.017585</td>
+      <td>-4.781933</td>
+      <td>-1.039004</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2019-01-12 00:00:00.040</td>
+      <td>-1.279061</td>
+      <td>0.316109</td>
+      <td>-0.235767</td>
+      <td>-0.325213</td>
+      <td>-2.354674</td>
+      <td>-0.277161</td>
       <td>6</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>2019-01-12 00:00:00.040</td>
-      <td>1.403332</td>
-      <td>-0.166845</td>
-      <td>0.153423</td>
-      <td>0.075705</td>
-      <td>0.308988</td>
-      <td>-1.397501</td>
+      <td>2019-01-12 00:00:00.080</td>
+      <td>0.914116</td>
+      <td>-0.112669</td>
+      <td>-0.110597</td>
+      <td>-0.794513</td>
+      <td>2.161712</td>
+      <td>-0.509329</td>
       <td>6</td>
     </tr>
     <tr>
-      <th>5</th>
-      <td>2019-01-12 00:00:00.050</td>
-      <td>1.337504</td>
-      <td>-0.359878</td>
-      <td>0.398052</td>
-      <td>-0.569856</td>
-      <td>0.542315</td>
-      <td>-1.102051</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2019-01-12 00:00:00.070</td>
-      <td>-2.238628</td>
-      <td>0.277729</td>
-      <td>0.513598</td>
-      <td>-1.314569</td>
-      <td>-0.263245</td>
-      <td>-0.586286</td>
+      <th>6</th>
+      <td>2019-01-12 00:00:00.120</td>
+      <td>-0.653178</td>
+      <td>0.129183</td>
+      <td>0.143089</td>
+      <td>-0.546611</td>
+      <td>-1.837420</td>
+      <td>-0.285121</td>
       <td>6</td>
     </tr>
     <tr>
@@ -477,64 +471,329 @@ outlier_rows_iqr
       <td>...</td>
     </tr>
     <tr>
-      <th>6461243</th>
-      <td>2019-01-12 00:59:55.340</td>
-      <td>-0.754690</td>
-      <td>0.538949</td>
-      <td>-0.425195</td>
-      <td>-1.462605</td>
-      <td>-2.305023</td>
-      <td>-1.132202</td>
+      <th>6461190</th>
+      <td>2019-01-12 00:55:43.120</td>
+      <td>-2.085337</td>
+      <td>-0.827651</td>
+      <td>-1.463370</td>
+      <td>-2.550496</td>
+      <td>0.618748</td>
+      <td>-2.374633</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>6461191</th>
+      <td>2019-01-12 00:55:43.140</td>
+      <td>-1.483377</td>
+      <td>-0.303822</td>
+      <td>-0.597220</td>
+      <td>-1.105563</td>
+      <td>0.414488</td>
+      <td>-1.039335</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>6461268</th>
+      <td>2019-01-12 00:55:44.680</td>
+      <td>-0.511578</td>
+      <td>-0.391480</td>
+      <td>-0.315421</td>
+      <td>-0.515037</td>
+      <td>1.527558</td>
+      <td>-0.439015</td>
       <td>3</td>
     </tr>
     <tr>
-      <th>6461244</th>
-      <td>2019-01-12 00:59:55.360</td>
-      <td>-0.383556</td>
-      <td>0.968782</td>
-      <td>-0.410470</td>
-      <td>-1.005387</td>
-      <td>1.599206</td>
-      <td>-1.222416</td>
+      <th>6461326</th>
+      <td>2019-01-12 00:55:45.840</td>
+      <td>-1.259664</td>
+      <td>-0.195045</td>
+      <td>-0.474727</td>
+      <td>-1.070482</td>
+      <td>-0.479864</td>
+      <td>-0.355435</td>
       <td>3</td>
     </tr>
     <tr>
-      <th>6461245</th>
-      <td>2019-01-12 00:59:55.380</td>
-      <td>-0.118463</td>
-      <td>0.496703</td>
-      <td>-0.279943</td>
-      <td>-0.498276</td>
-      <td>1.425740</td>
-      <td>-0.844314</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6461247</th>
-      <td>2019-01-12 00:59:55.420</td>
-      <td>-0.361572</td>
-      <td>-0.211942</td>
-      <td>-0.245138</td>
-      <td>-0.674850</td>
-      <td>-1.987632</td>
-      <td>-0.729889</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6461248</th>
-      <td>2019-01-12 00:59:55.440</td>
-      <td>-0.422352</td>
-      <td>-0.068312</td>
-      <td>-0.273920</td>
-      <td>-0.641328</td>
-      <td>-1.477920</td>
-      <td>-0.417125</td>
+      <th>6461327</th>
+      <td>2019-01-12 00:55:45.860</td>
+      <td>-1.102547</td>
+      <td>-0.000721</td>
+      <td>-0.371647</td>
+      <td>-0.945361</td>
+      <td>-0.012263</td>
+      <td>-0.409165</td>
       <td>3</td>
     </tr>
   </tbody>
 </table>
 <p>1399305 rows × 8 columns</p>
 </div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-19a1a838-e024-4fa1-b7c6-584ed2b00b3d')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-19a1a838-e024-4fa1-b7c6-584ed2b00b3d button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-19a1a838-e024-4fa1-b7c6-584ed2b00b3d');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+    <div id="df-8f2e2643-b470-41ac-96db-e52cae8bd8ad">
+      <button class="colab-df-quickchart" onclick="quickchart('df-8f2e2643-b470-41ac-96db-e52cae8bd8ad')"
+                title="Suggest charts"
+                style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+      </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+      <script>
+        async function quickchart(key) {
+          const quickchartButtonEl =
+            document.querySelector('#' + key + ' button');
+          quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+          quickchartButtonEl.classList.add('colab-df-spinner');
+          try {
+            const charts = await google.colab.kernel.invokeFunction(
+                'suggestCharts', [key], {});
+          } catch (error) {
+            console.error('Error during call to suggestCharts:', error);
+          }
+          quickchartButtonEl.classList.remove('colab-df-spinner');
+          quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+        }
+        (() => {
+          let quickchartButtonEl =
+            document.querySelector('#df-8f2e2643-b470-41ac-96db-e52cae8bd8ad button');
+          quickchartButtonEl.style.display =
+            google.colab.kernel.accessAllowed ? 'block' : 'none';
+        })();
+      </script>
+    </div>
+
+  <div id="id_5f260d9f-0246-4e8f-a843-2cb1582decbb">
+    <style>
+      .colab-df-generate {
+        background-color: #E8F0FE;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: none;
+        fill: #1967D2;
+        height: 32px;
+        padding: 0 0 0 0;
+        width: 32px;
+      }
+
+      .colab-df-generate:hover {
+        background-color: #E2EBFA;
+        box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+        fill: #174EA6;
+      }
+
+      [theme=dark] .colab-df-generate {
+        background-color: #3B4455;
+        fill: #D2E3FC;
+      }
+
+      [theme=dark] .colab-df-generate:hover {
+        background-color: #434B5C;
+        box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+        filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+        fill: #FFFFFF;
+      }
+    </style>
+    <button class="colab-df-generate" onclick="generateWithVariable('outlier_rows_iqr')"
+            title="Generate code using this dataframe."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+       width="24px">
+    <path d="M7,19H8.4L18.45,9,17,7.55,7,17.6ZM5,21V16.75L18.45,3.32a2,2,0,0,1,2.83,0l1.4,1.43a1.91,1.91,0,0,1,.58,1.4,1.91,1.91,0,0,1-.58,1.4L9.25,21ZM18.45,9,17,7.55Zm-12,3A5.31,5.31,0,0,0,4.9,8.1,5.31,5.31,0,0,0,1,6.5,5.31,5.31,0,0,0,4.9,4.9,5.31,5.31,0,0,0,6.5,1,5.31,5.31,0,0,0,8.1,4.9,5.31,5.31,0,0,0,12,6.5,5.46,5.46,0,0,0,6.5,12Z"/>
+  </svg>
+    </button>
+    <script>
+      (() => {
+      const buttonEl =
+        document.querySelector('#id_5f260d9f-0246-4e8f-a843-2cb1582decbb button.colab-df-generate');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      buttonEl.onclick = () => {
+        google.colab.notebook.generateWithVariable('outlier_rows_iqr');
+      }
+      })();
+    </script>
+  </div>
+
+    </div>
+  </div>
+
 
 
 
@@ -555,7 +814,9 @@ Primeras filas del DataFrame preprocesado:
 
 
 
-<div>
+
+  <div id="df-97729e72-d16e-4171-86c6-e2d2d3fbceeb" class="colab-df-container">
+    <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -587,61 +848,271 @@ Primeras filas del DataFrame preprocesado:
     <tr>
       <th>0</th>
       <td>2019-01-12 00:00:00.000</td>
-      <td>0.330293</td>
-      <td>1.353248</td>
-      <td>1.749055</td>
-      <td>-7.181078</td>
-      <td>-0.822551</td>
-      <td>0.454455</td>
+      <td>1.530946</td>
+      <td>-3.075040</td>
+      <td>-0.366962</td>
+      <td>-6.458873</td>
+      <td>-1.395586</td>
+      <td>-2.656883</td>
       <td>6</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>2019-01-12 00:00:00.010</td>
-      <td>0.939690</td>
-      <td>1.276724</td>
-      <td>1.341687</td>
-      <td>2.387553</td>
-      <td>0.684944</td>
-      <td>-0.047014</td>
+      <td>2019-01-12 00:00:00.020</td>
+      <td>-0.251654</td>
+      <td>-1.190949</td>
+      <td>-0.455985</td>
+      <td>3.017585</td>
+      <td>-4.781933</td>
+      <td>-1.039004</td>
       <td>6</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>2019-01-12 00:00:00.020</td>
-      <td>-0.757338</td>
-      <td>0.863492</td>
-      <td>0.006493</td>
-      <td>0.893189</td>
-      <td>-0.255631</td>
-      <td>-1.209252</td>
+      <td>2019-01-12 00:00:00.040</td>
+      <td>-1.279061</td>
+      <td>0.316109</td>
+      <td>-0.235767</td>
+      <td>-0.325213</td>
+      <td>-2.354674</td>
+      <td>-0.277161</td>
       <td>6</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>2019-01-12 00:00:00.030</td>
-      <td>0.625506</td>
-      <td>0.129082</td>
-      <td>0.315552</td>
-      <td>-1.531676</td>
-      <td>-2.501871</td>
-      <td>-0.809751</td>
+      <td>2019-01-12 00:00:00.060</td>
+      <td>-0.079667</td>
+      <td>-0.329167</td>
+      <td>-0.333494</td>
+      <td>-0.662767</td>
+      <td>0.305756</td>
+      <td>-0.505348</td>
       <td>6</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>2019-01-12 00:00:00.040</td>
-      <td>1.403332</td>
-      <td>-0.166845</td>
-      <td>0.153423</td>
-      <td>0.075705</td>
-      <td>0.308988</td>
-      <td>-1.397501</td>
+      <td>2019-01-12 00:00:00.080</td>
+      <td>0.914116</td>
+      <td>-0.112669</td>
+      <td>-0.110597</td>
+      <td>-0.794513</td>
+      <td>2.161712</td>
+      <td>-0.509329</td>
       <td>6</td>
     </tr>
   </tbody>
 </table>
 </div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-97729e72-d16e-4171-86c6-e2d2d3fbceeb')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-97729e72-d16e-4171-86c6-e2d2d3fbceeb button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-97729e72-d16e-4171-86c6-e2d2d3fbceeb');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+    <div id="df-014844a8-8e5e-4fa7-b6c0-c4a41f102bce">
+      <button class="colab-df-quickchart" onclick="quickchart('df-014844a8-8e5e-4fa7-b6c0-c4a41f102bce')"
+                title="Suggest charts"
+                style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+      </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+      <script>
+        async function quickchart(key) {
+          const quickchartButtonEl =
+            document.querySelector('#' + key + ' button');
+          quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+          quickchartButtonEl.classList.add('colab-df-spinner');
+          try {
+            const charts = await google.colab.kernel.invokeFunction(
+                'suggestCharts', [key], {});
+          } catch (error) {
+            console.error('Error during call to suggestCharts:', error);
+          }
+          quickchartButtonEl.classList.remove('colab-df-spinner');
+          quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+        }
+        (() => {
+          let quickchartButtonEl =
+            document.querySelector('#df-014844a8-8e5e-4fa7-b6c0-c4a41f102bce button');
+          quickchartButtonEl.style.display =
+            google.colab.kernel.accessAllowed ? 'block' : 'none';
+        })();
+      </script>
+    </div>
+
+    </div>
+  </div>
+
 
 
 
@@ -649,7 +1120,9 @@ Resumen estadístico del DataFrame preprocesado:
 
 
 
-<div>
+
+  <div id="df-da6178c4-39c0-464a-868e-4a2779df72ff" class="colab-df-container">
+    <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -691,13 +1164,13 @@ Resumen estadístico del DataFrame preprocesado:
     </tr>
     <tr>
       <th>mean</th>
-      <td>2012-02-20 18:20:58.805005824</td>
-      <td>-3.177651e-17</td>
-      <td>1.977674e-17</td>
-      <td>5.236261e-16</td>
-      <td>-1.634220e-16</td>
-      <td>-1.349886e-16</td>
-      <td>-6.127270e-16</td>
+      <td>2012-02-20 18:20:58.805004544</td>
+      <td>-1.747884e-15</td>
+      <td>7.787531e-17</td>
+      <td>2.121953e-16</td>
+      <td>-4.649293e-16</td>
+      <td>-4.743602e-17</td>
+      <td>1.439972e-16</td>
       <td>6.783833e+00</td>
     </tr>
     <tr>
@@ -769,6 +1242,216 @@ Resumen estadístico del DataFrame preprocesado:
   </tbody>
 </table>
 </div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-da6178c4-39c0-464a-868e-4a2779df72ff')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-da6178c4-39c0-464a-868e-4a2779df72ff button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-da6178c4-39c0-464a-868e-4a2779df72ff');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+    <div id="df-dfcf403d-1bc4-4583-aad0-3e2e738755dd">
+      <button class="colab-df-quickchart" onclick="quickchart('df-dfcf403d-1bc4-4583-aad0-3e2e738755dd')"
+                title="Suggest charts"
+                style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+      </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+      <script>
+        async function quickchart(key) {
+          const quickchartButtonEl =
+            document.querySelector('#' + key + ' button');
+          quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+          quickchartButtonEl.classList.add('colab-df-spinner');
+          try {
+            const charts = await google.colab.kernel.invokeFunction(
+                'suggestCharts', [key], {});
+          } catch (error) {
+            console.error('Error during call to suggestCharts:', error);
+          }
+          quickchartButtonEl.classList.remove('colab-df-spinner');
+          quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+        }
+        (() => {
+          let quickchartButtonEl =
+            document.querySelector('#df-dfcf403d-1bc4-4583-aad0-3e2e738755dd button');
+          quickchartButtonEl.style.display =
+            google.colab.kernel.accessAllowed ? 'block' : 'none';
+        })();
+      </script>
+    </div>
+
+    </div>
+  </div>
+
 
 
 
@@ -931,7 +1614,7 @@ plt.ylabel("Componente Principal 2")
 plt.show()
 ```
 
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\IPython\core\pylabtools.py:170: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+    /usr/local/lib/python3.11/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
       fig.canvas.print_figure(bytes_io, **kw)
 
 
@@ -985,10 +1668,10 @@ plt.legend(title="Cluster")
 plt.show()
 ```
 
-    C:\Users\alexr\AppData\Local\Temp\ipykernel_30276\1872158595.py:3: UserWarning: 
+    <ipython-input-21-a22e53060c64>:3: UserWarning: 
     The markers list has fewer values (3) than needed (12) and will cycle, which may produce an uninterpretable plot.
-      sns.scatterplot(x="PC1", y="PC2", hue="cluster", data=df, palette="deep", style="label", markers=["o", "s", "D"])
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\IPython\core\pylabtools.py:170: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+      sns.scatterplot(
+    /usr/local/lib/python3.11/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
       fig.canvas.print_figure(bytes_io, **kw)
 
 
@@ -1007,11 +1690,550 @@ print(df["cluster"].value_counts())
 
     Número de muestras en cada clúster:
     cluster
-    1    2795979
-    2    2536244
-    0     994941
-    3     134164
+    1    3291104
+    0    2723138
+    3     279700
+    2     167386
     Name: count, dtype: int64
+
+
+
+```python
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+import pandas as pd
+import os
+```
+
+
+```python
+# Ruta a los archivos CSV (ajústalo a tu ruta local)
+data_dir = "./data/harth"
+
+# Cargar solo algunos archivos y pocas filas para evitar exceso de RAM
+data_frames = []
+files = [f for f in os.listdir(data_dir) if f.endswith(".csv")][:3]
+for file in files:
+    df = pd.read_csv(os.path.join(data_dir, file), nrows=10000)
+    data_frames.append(df)
+data = pd.concat(data_frames, ignore_index=True)
+```
+
+
+```python
+# Mapear etiquetas a nombres
+label_mapping = {
+    1: "walking",
+    2: "running",
+    3: "shuffling",
+    4: "stairs_up",
+    5: "stairs_down",
+    6: "standing",
+    7: "sitting",
+    8: "lying",
+    13: "cycling_sit",
+    14: "cycling_stand",
+    130: "cycling_sit_inactive",
+    140: "cycling_stand_inactive",
+}
+data["activity"] = data["label"].map(label_mapping)
+data.dropna(subset=["activity"], inplace=True)
+
+# Seleccionar variables (puedes agregar más si deseas)
+features = ["back_x", "back_y", "back_z", "thigh_x", "thigh_y", "thigh_z"]
+X = data[features]
+y = data["activity"]
+```
+
+
+```python
+# Normalización
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Dividir datos
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42
+)
+
+# Definir el modelo MLP
+mlp = MLPClassifier(
+    hidden_layer_sizes=(64, 32),
+    activation="relu",
+    solver="adam",
+    max_iter=200,
+    random_state=42,
+)
+```
+
+
+```python
+# Entrenar el modelo
+mlp.fit(X_train, y_train)
+```
+
+    /usr/local/lib/python3.11/dist-packages/sklearn/neural_network/_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
+      warnings.warn(
+
+
+
+
+
+<style>#sk-container-id-1 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: #000;
+  --sklearn-color-text-muted: #666;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-1 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-1 pre {
+  padding: 0;
+}
+
+#sk-container-id-1 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-1 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-1 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-1 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-1 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-1 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-1 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-1 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-1 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-1 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-1 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-1 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-1 label.sk-toggleable__label {
+  cursor: pointer;
+  display: flex;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#sk-container-id-1 label.sk-toggleable__label .caption {
+  font-size: 0.6rem;
+  font-weight: lighter;
+  color: var(--sklearn-color-text-muted);
+}
+
+#sk-container-id-1 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-1 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-1 div.sk-label label.sk-toggleable__label,
+#sk-container-id-1 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-1 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-1 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-1 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-1 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-1 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 0.5em;
+  text-align: center;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-1 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-1 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-1 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-1 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>MLPClassifier(hidden_layer_sizes=(64, 32), random_state=42)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>MLPClassifier</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.neural_network.MLPClassifier.html">?<span>Documentation for MLPClassifier</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>MLPClassifier(hidden_layer_sizes=(64, 32), random_state=42)</pre></div> </div></div></div></div>
+
+
+
+
+```python
+# Evaluar
+y_pred = mlp.predict(X_test)
+print("Matriz de Confusión:")
+print(confusion_matrix(y_test, y_pred))
+print("\nInforme de Clasificación:")
+print(classification_report(y_test, y_pred))
+```
+
+    Matriz de Confusión:
+    [[1295    1    0   12   16    5   31]
+     [   5   97    0   15   18   16  165]
+     [   0    2  799    0    0    0    5]
+     [   7    1    2  671   31    0   97]
+     [  40    6    0   18  885    2   78]
+     [   0    6    0    3    6  397   20]
+     [  42   42    5  114   85   16  944]]
+    
+    Informe de Clasificación:
+                  precision    recall  f1-score   support
+    
+     cycling_sit       0.93      0.95      0.94      1360
+       shuffling       0.63      0.31      0.41       316
+         sitting       0.99      0.99      0.99       806
+     stairs_down       0.81      0.83      0.82       809
+       stairs_up       0.85      0.86      0.86      1029
+        standing       0.91      0.92      0.91       432
+         walking       0.70      0.76      0.73      1248
+    
+        accuracy                           0.85      6000
+       macro avg       0.83      0.80      0.81      6000
+    weighted avg       0.84      0.85      0.84      6000
+    
 
 
 ## **Interpretación de resultados**

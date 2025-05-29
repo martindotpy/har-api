@@ -25,7 +25,7 @@
 - Martín Alexander Ramos Yampufe - 506251051
 
 
-## **Introducción**
+## **1. Introducción**
 
 
 **El Reconocimiento de Actividad Humana (HAR)** es una técnica ampliamente
@@ -48,7 +48,7 @@ facilitando su aplicación en el monitoreo de la salud y la detección temprana 
 conductas sedentarias.
 
 
-## **Objetivos**
+## **2. Objetivos**
 
 
 El objetivo de este análisis es identificar patrones de movimiento a partir de
@@ -59,7 +59,7 @@ evaluar su utilidad en el Reconocimiento de Actividad Humana (HAR) para prevenir
 enfermedades relacionadas con el sedentarismo.
 
 
-## **Preprocesamiento de datos**
+## **3. Preprocesamiento de datos**
 
 
 
@@ -74,6 +74,7 @@ from typing import Final
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import polars as pl
 import requests
 import seaborn as sns
@@ -84,18 +85,18 @@ from sklearn.cluster import MiniBatchKMeans
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.inspection import permutation_importance
-from sklearn.manifold import TSNE
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
     accuracy_score,
     classification_report,
     confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    silhouette_score,
 )
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.models import Sequential
 ```
 
 
@@ -460,7 +461,7 @@ display(
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_13_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_13_0.png)
     
 
 
@@ -587,7 +588,7 @@ df.columns
 
 
 
-## **Descripción del conjunto de datos**
+## **4. Descripción del conjunto de datos**
 
 
 El conjunto de datos contiene registros de acelerómetros con mediciones en
@@ -607,7 +608,7 @@ thigh_y, thigh_z), junto con una etiqueta (label) que clasifica la actividad.
   patrones en los datos.
 
 
-## **Análisis Exploratorio de Datos (EDA)**
+## **5. Análisis Exploratorio de Datos (EDA)**
 
 
 Se realizará un análisis exploratorio de los datos obtenidos por acelerómetros
@@ -615,6 +616,9 @@ para identificar patrones, anomalías y relaciones entre variables mediante
 histogramas y matrices de correlación. Este proceso optimizará la selección de
 características y la normalización de los datos para aplicar clustering con
 K-Means de manera efectiva.
+
+
+### **5.1 Histogramas por Componente Espacial del Sensor**
 
 
 
@@ -632,8 +636,11 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_20_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_21_0.png)
     
+
+
+### **5.2 Gráficas de Densidad KDE por Eje de Movimiento y Actividad**
 
 
 
@@ -667,8 +674,11 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_21_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_23_0.png)
     
+
+
+### **5.3 Histograma de Frecuencia por Tipo de Actividad**
 
 
 
@@ -683,8 +693,11 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_22_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_25_0.png)
     
+
+
+### **5.4 Matriz de Correlación**
 
 
 
@@ -699,8 +712,11 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_27_0.png)
     
+
+
+### **5.5 Gráfico de Dispersión de Análisis de Componentes Principales (PCA)**
 
 
 
@@ -716,11 +732,11 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_24_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_29_0.png)
     
 
 
-## **Aplicación de K-Means para Clustering**
+## **6. Aplicación de K-Means para Clustering**
 
 
 El clustering es una técnica de aprendizaje no supervisado que se utiliza para
@@ -729,6 +745,9 @@ algoritmo K-Means para identificar patrones en los datos del acelerómetro. El
 objetivo es agrupar las muestras en diferentes clústeres basados en las
 características cuantitativas, lo que puede ayudarnos a entender mejor las
 diferentes actividades representadas en el conjunto de datos.
+
+
+### **6.1 Mapeo de etiquetas de actividad, filtrado y muestreo del dataset para análisis posterior**
 
 
 
@@ -770,13 +789,19 @@ x = df[features].to_numpy()
 y = df["activity"].to_numpy()
 ```
 
+### **6.2 Normalización de características y determinación del número óptimo de clústeres con el Método del Codo**
+
+
 
 ```python
 # Normalización
 scaler = StandardScaler()
 x_scaled = scaler.fit_transform(x)
+```
 
-# ---- CLUSTERING CON MÉTODO DEL CODO ----
+
+```python
+# MÉTODO DEL CODO
 inertia = []
 k_range = range(1, 6)  # ✅ menor rango, más rápido
 
@@ -797,14 +822,62 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_28_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_36_0.png)
     
+
+
+El número óptimo de clústeres es K = 3 porque es donde la curva del gráfico
+forma un “codo”. Esto significa que con tres clústeres se logra una buena
+separación de los datos, y añadir más ya no mejora mucho el resultado.
+
+
+### **6.3 método del coeficiente de silueta**
+
+
+
+```python
+# Rango de K
+k_range = range(2, 6)
+
+# Lista para almacenar los scores
+silhouette_scores = []
+
+# Calcular score de silueta para cada K
+for k in k_range:
+    kmeans = MiniBatchKMeans(n_clusters=k, random_state=42, batch_size=1024)
+    labels = kmeans.fit_predict(x_scaled)
+    score = silhouette_score(x_scaled, labels)
+    silhouette_scores.append(score)
+
+# Graficar resultados
+plt.figure(figsize=(8, 5))
+plt.plot(k_range, silhouette_scores, "go-")
+plt.xlabel("Número de Clústeres (K)")
+plt.ylabel("Coeficiente de Silueta")
+plt.title("Método del Coeficiente de Silueta")
+plt.grid(visible=True)
+plt.show()
+```
+
+
+    
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_39_0.png)
+    
+
+
+La gráfica del coeficiente de silueta muestra que K = 4 tiene la mejor
+separación entre clústeres, ya que alcanza el valor más alto. Aunque el método
+del codo sugiere K = 3 como un buen punto, la silueta indica que agrupar en
+cuatro clústeres da resultados más claros.
+
+
+### **6.4 Clustering final con K óptimo y asignación de clusters al dataframe**
 
 
 
 ```python
 # Clustering final con K óptimo
-optimal_k = 4
+optimal_k = 3
 kmeans_final = MiniBatchKMeans(
     n_clusters=optimal_k, random_state=42, batch_size=1024
 )
@@ -812,7 +885,10 @@ clusters = kmeans_final.fit_predict(x_scaled)
 
 # Asignar cluster a la muestra, no al dataframe completo
 df = df.with_columns([pl.Series("cluster", clusters)])
+```
 
+
+```python
 # Visualización PCA de los clusters
 pca = PCA(n_components=2)
 x_pca = pca.fit_transform(x_scaled)
@@ -829,98 +905,21 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_29_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_43_0.png)
     
+
+
+## **7. Clasificación con MLP (Perceptrón Multicapa)**
 
 
 
 ```python
 # Asegurarse de que y viene del mismo conjunto que X_scaled
 y = df["activity"].to_numpy()
-
-# ---- CLASIFICACIÓN CON MLP ----
-x_train, x_test, y_train, y_test = train_test_split(
-    x_scaled, y, test_size=0.2, random_state=42
-)
-
-mlp = MLPClassifier(
-    hidden_layer_sizes=(64, 32),
-    activation="relu",
-    solver="adam",
-    max_iter=200,
-    random_state=42,
-)
-mlp.fit(x_train, y_train)
-
-y_pred = mlp.predict(x_test)
-
-display(
-    Markdown("Matriz de Confusión:"),
-    confusion_matrix(y_test, y_pred),
-    Markdown("Informe de Clasificación:"),
-)
-print(classification_report(y_test, y_pred))
 ```
 
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
-      warnings.warn(
-    
+### **7.1 Análisis de Outliers y Distribución de Características**
 
-
-Matriz de Confusión:
-
-
-
-    array([[ 672,   29,   11,    2,    0,    3,    1,    9,    0,    2,    8,
-              67],
-           [  31,   29,    5,    0,    0,    0,    1,    6,    0,    0,    7,
-               6],
-           [  23,    6,   59,    3,    0,    3,    0,    0,    1,    1,    5,
-              15],
-           [   4,    1,    4,    2,    0,    0,    0,    1,    0,    0,    2,
-               0],
-           [   0,    0,    0,    0,  845,    2,    0,    2,    0,    0,    0,
-               1],
-           [   3,    0,    3,    0,    3,  468,    0,    6,    1,    1,    1,
-              89],
-           [  13,    1,    1,    0,    3,    1,   65,    3,    1,    0,  251,
-             160],
-           [  10,    1,    0,    0,    1,    0,    1, 5724,    0,    0,    5,
-               7],
-           [  11,    0,    2,    0,    0,    8,    0,    0,    5,    0,    5,
-              99],
-           [  24,    1,    3,    0,    0,    3,    1,    0,    1,    8,    8,
-              94],
-           [  12,    3,    3,    0,    0,    2,   24,   12,    0,    1, 1355,
-              93],
-           [  41,    8,   17,    2,    0,   51,   56,    5,   11,    3,  200,
-            2059]])
-
-
-
-Informe de Clasificación:
-
-
-                            precision    recall  f1-score   support
-    
-               cycling_sit       0.80      0.84      0.82       804
-      cycling_sit_inactive       0.37      0.34      0.35        85
-             cycling_stand       0.55      0.51      0.53       116
-    cycling_stand_inactive       0.22      0.14      0.17        14
-                     lying       0.99      0.99      0.99       850
-                   running       0.87      0.81      0.84       575
-                 shuffling       0.44      0.13      0.20       499
-                   sitting       0.99      1.00      0.99      5749
-               stairs_down       0.25      0.04      0.07       130
-                 stairs_up       0.50      0.06      0.10       143
-                  standing       0.73      0.90      0.81      1505
-                   walking       0.77      0.84      0.80      2453
-    
-                  accuracy                           0.87     12923
-                 macro avg       0.62      0.55      0.56     12923
-              weighted avg       0.86      0.87      0.86     12923
-    
-    
 
 
 ```python
@@ -935,7 +934,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_31_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_47_0.png)
     
 
 
@@ -945,76 +944,282 @@ plt.show()
 X_train_o, X_test_o, y_train_o, y_test_o = train_test_split(
     x_scaled, y, test_size=0.2, random_state=42
 )
-mlp.fit(X_train_o, y_train_o)
-y_pred_o = mlp.predict(X_test_o)
-acc_original = accuracy_score(y_test_o, y_pred_o)
-
-# Quitar outliers usando Z-score
-z_scores = np.abs(zscore(df[features]))
-filtered_entries = (z_scores < 3).all(axis=1)
-data_no_outliers = df.filter(filtered_entries)
-
-# Re-calcular datos
-X_clean = scaler.fit_transform(data_no_outliers[features].to_numpy())
-y_clean = data_no_outliers["activity"]
-x_train_c, x_test_c, y_train_c, y_test_c = train_test_split(
-    X_clean, y_clean, test_size=0.2, random_state=42
-)
-mlp.fit(x_train_c, y_train_c)
-y_pred_c = mlp.predict(x_test_c)
-acc_clean = accuracy_score(y_test_c, y_pred_c)
-
-# Comparar resultados
-display(
-    Markdown(
-        cleandoc(f"""
-            Accuracy con outliers: {acc_original:.4f}
-
-            Accuracy sin outliers: {acc_clean:.4f}""")
-    )
-)
-
-if acc_clean > acc_original:
-    Markdown(
-        cleandoc("""
-            ✅ Los valores atípicos estaban afectando negativamente al modelo.
-
-            👉 Es recomendable aplicar una estrategia para eliminarlos o mitigarlos.""")
-    )
-
-else:
-    Markdown(
-        "👍 Los valores atípicos no están afectando negativamente al modelo."
-    )
 ```
 
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
-      warnings.warn(
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
-      warnings.warn(
-    
+#### Configuración y entrenamiento del modelo MLP
 
+Creamos un perceptrón multicapa con:
 
-Accuracy con outliers: 0.8737
-
-Accuracy sin outliers: 0.8680
-
-
-1. Entrenamiento del modelo Nuevamente Al ya tener el modelo este puede aprender
-   patrones en los datos:
+- Dos capas ocultas (64 y 32 neuronas respectivamente).
+- Función de activación ReLU.
+- Optimizador Adam.
+- Máximo 200 iteraciones.
 
 
 
 ```python
-mlp.fit(x_train, y_train)
-y_pred = mlp.predict(x_test)
+mlp = MLPClassifier(
+    hidden_layer_sizes=(64, 32),  # Arquitectura de la red
+    activation="relu",  # Función de activación
+    solver="adam",  # Algoritmo de optimización
+    max_iter=200,  # Máximo de iteraciones
+    random_state=42,  # Semilla para reproducibilidad
+)
+```
+
+### **7.2 Predicción y evaluación**
+
+
+
+```python
+# Entrenamiento y evaluación con outliers
+mlp.fit(X_train_o, y_train_o)
+y_pred_o = mlp.predict(X_test_o)
+acc_original = accuracy_score(y_test_o, y_pred_o)
 ```
 
     c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
       warnings.warn(
     
 
-2. Matriz de confusión: ¿Qué patrones acierta o falla el modelo?
+
+```python
+# Quitar outliers usando Z-score (versión corregida para Polars)
+z_scores = np.abs(zscore(df[features]))
+filtered_entries = (z_scores < 3).all(axis=1)
+
+# Usar el método filter() de Polars en lugar de indexación booleana
+data_no_outliers = df.filter(filtered_entries)  # Corrección clave aquí
+
+# Re-calcular datos
+X_clean = scaler.fit_transform(data_no_outliers[features].to_numpy())
+y_clean = data_no_outliers["activity"]
+
+# Calculate accuracy for the model without outliers
+X_train_clean, X_test_clean, y_train_clean, y_test_clean = train_test_split(
+    X_clean, y_clean, test_size=0.2, random_state=42
+)
+mlp_clean = MLPClassifier(
+    hidden_layer_sizes=(64, 32),  # Arquitectura de la red
+    activation="relu",  # Función de activación
+    solver="adam",  # Algoritmo de optimización
+    max_iter=200,  # Máximo de iteraciones
+    random_state=42,  # Semilla para reproducibilidad
+)
+mlp_clean.fit(X_train_clean, y_train_clean)
+y_pred_clean = mlp_clean.predict(X_test_clean)
+acc_clean = accuracy_score(y_test_clean, y_pred_clean)
+```
+
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
+      warnings.warn(
+    
+
+
+```python
+# Resultados comparativos
+display(
+    Markdown(f"""
+### Resultados Comparativos:
+- **Accuracy con outliers:** {acc_original:.4f}
+- **Accuracy sin outliers:** {acc_clean:.4f}
+""")
+)
+```
+
+
+
+### Resultados Comparativos:
+- **Accuracy con outliers:** 0.8737
+- **Accuracy sin outliers:** 0.8680
+
+
+
+
+```python
+# Recomendación basada en los resultados
+if acc_clean > acc_original:
+    display(
+        Markdown(
+            "**Conclusión:** Los valores atípicos afectan negativamente al modelo. Se recomienda usar los datos limpios para el modelado final."
+        )
+    )
+    x_scaled, y = X_clean, y_clean  # Usamos datos limpios
+else:
+    display(
+        Markdown(
+            "**Conclusión:** Los valores atípicos no tienen impacto negativo. Se mantienen los datos originales."
+        )
+    )
+    # x_scaled e y ya están definidos
+```
+
+
+**Conclusión:** Los valores atípicos no tienen impacto negativo. Se mantienen los datos originales.
+
+
+### **7.3 Modelado Final (Con la mejor opción)**
+
+
+
+```python
+display(Markdown("\n## Entrenamiento del Modelo Final"))
+
+# Redefinimos los datos de entrenamiento/prueba con la mejor opción
+x_train, x_test, y_train, y_test = train_test_split(
+    x_scaled, y, test_size=0.2, random_state=42
+)
+
+# Reinstanciamos el modelo para evitar contaminación
+mlp_final = MLPClassifier(
+    hidden_layer_sizes=(64, 32),
+    activation="relu",
+    solver="adam",
+    max_iter=200,
+    random_state=42,
+)
+
+# Entrenamiento y evaluación final
+mlp_final.fit(x_train, y_train)
+y_pred = mlp_final.predict(x_test)
+
+# Métricas finales
+display(Markdown("### Resultados de Evaluación Final"))
+
+display(
+    Markdown("""
+A continuación, se muestran resultados de evaluación:
+
+1. Reporte de clasificación (métricas de evaluación).
+2. Métricas adicionales resumidas.
+""")
+)
+
+# Reporte de clasificación completo
+display(Markdown("#### Informe de Clasificación Detallado:"))
+print(classification_report(y_test, y_pred, digits=4))
+
+# Métricas resumidas en tabla
+display(Markdown("#### Métricas Principales:"))
+metrics_df = pd.DataFrame(
+    {
+        "Métrica": [
+            "Accuracy",
+            "Precision (promedio)",
+            "Recall (promedio)",
+            "F1-score (promedio)",
+        ],
+        "Valor": [
+            accuracy_score(y_test, y_pred),
+            precision_score(y_test, y_pred, average="weighted"),
+            recall_score(y_test, y_pred, average="weighted"),
+            f1_score(y_test, y_pred, average="weighted"),
+        ],
+    }
+)
+display(metrics_df.round(4))
+```
+
+
+
+## Entrenamiento del Modelo Final
+
+
+    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\neural_network\_multilayer_perceptron.py:691: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn't converged yet.
+      warnings.warn(
+    
+
+
+### Resultados de Evaluación Final
+
+
+
+
+A continuación, se muestran resultados de evaluación:
+1. Reporte de clasificación (métricas de evaluación)
+2. Métricas adicionales resumidas
+
+
+
+
+#### Informe de Clasificación Detallado:
+
+
+                            precision    recall  f1-score   support
+    
+               cycling_sit     0.7962    0.8358    0.8155       804
+      cycling_sit_inactive     0.3671    0.3412    0.3537        85
+             cycling_stand     0.5463    0.5086    0.5268       116
+    cycling_stand_inactive     0.2222    0.1429    0.1739        14
+                     lying     0.9918    0.9941    0.9929       850
+                   running     0.8651    0.8139    0.8387       575
+                 shuffling     0.4362    0.1303    0.2006       499
+                   sitting     0.9924    0.9957    0.9940      5749
+               stairs_down     0.2500    0.0385    0.0667       130
+                 stairs_up     0.5000    0.0559    0.1006       143
+                  standing     0.7336    0.9003    0.8085      1505
+                   walking     0.7654    0.8394    0.8007      2453
+    
+                  accuracy                         0.8737     12923
+                 macro avg     0.6222    0.5497    0.5561     12923
+              weighted avg     0.8579    0.8737    0.8585     12923
+    
+    
+
+
+#### Métricas Principales:
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Métrica</th>
+      <th>Valor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Accuracy</td>
+      <td>0.8737</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Precision (promedio)</td>
+      <td>0.8579</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Recall (promedio)</td>
+      <td>0.8737</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>F1-score (promedio)</td>
+      <td>0.8585</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+#### **7.3.1 Matriz de confusión: ¿Qué patrones acierta o falla el modelo?**
 
 
 
@@ -1029,21 +1234,13 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_36_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_59_0.png)
     
 
 
-Interpretación:
+#### **7.3.2 Análisis de importancia de características (permutación)**
 
-Pemite ver qué actividades físicas se predicen bien.
-
-Si por ejemplo siempre confunde walking con jogging, hay un patrón de similitud
-que puedes investigar más.
-
-
-3. Análisis de importancia de características (permutación) Esto te dice qué
-   variables (acelerómetro, giroscopio, etc.) son más importantes para predecir
-   una actividad:
+Esto te dice qué variables son más relevantes para predecir una actividad:
 
 
 
@@ -1066,238 +1263,13 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_39_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_61_0.png)
     
-
-
-4. Visualización PCA o t-SNE para detectar agrupamientos naturales Esto ayuda a
-   ver si hay patrones de agrupamiento en los movimientos:
 
 
 
 ```python
-x_tsne = TSNE(n_components=2, random_state=42).fit_transform(x_scaled)
-
-plt.figure(figsize=(8, 6))
-plt.scatter(
-    x_tsne[:, 0],
-    x_tsne[:, 1],
-    c=df["activity"].cast(pl.Categorical).to_physical().to_numpy(),
-    cmap="tab10",
-    alpha=0.7,
-)
-plt.title("Visualización t-SNE de Actividades Físicas")
-plt.xlabel("Componente 1")
-plt.ylabel("Componente 2")
-plt.colorbar(label="Actividad (códigos)")
-plt.grid(visible=True)
-plt.show()
-```
-
-
-    
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_41_0.png)
-    
-
-
-5. Conclusión: Relación con el problema planteado
-
-Se identificaron patrones relevantes en los sensores del dispositivo (como la
-aceleración en el eje X y el giroscopio en Z) que permiten predecir con
-precisión actividades físicas como caminar, correr o estar sentado. El modelo
-MLP alcanzó una precisión del X%, y se observaron agrupamientos claros entre
-clases similares, lo que permite implementar una solución efectiva de
-reconocimiento de actividad física en tiempo real.
-
-
-
-```python
-# Codificación de etiquetas si son categóricas
-le = LabelEncoder()
-y_encoded = le.fit_transform(y[: len(x_scaled)])
-
-# División
-x_train, x_test, y_train, y_test = train_test_split(
-    x_scaled, y_encoded, test_size=0.2, random_state=42
-)
-```
-
-
-```python
-# Modelo secuencial
-model = Sequential(
-    [
-        Dense(128, activation="relu", input_shape=(x_scaled.shape[1],)),
-        Dropout(0.3),
-        Dense(64, activation="relu"),
-        Dropout(0.3),
-        Dense(32, activation="relu"),
-        Dense(
-            len(
-                set(y_encoded)
-            ),  # salida multiclase # type: ignore  # noqa: PGH003
-            activation="softmax",
-        ),
-    ]
-)
-
-model.compile(
-    optimizer="adam",
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
-)
-```
-
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\keras\src\layers\core\dense.py:93: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
-      super().__init__(activity_regularizer=activity_regularizer, **kwargs)
-    
-
-
-```python
-# Entrenamiento
-history = model.fit(
-    x_train, y_train, epochs=25, batch_size=64, validation_split=0.2, verbose=1
-)
-```
-
-    Epoch 1/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.6189 - loss: 1.2967 - val_accuracy: 0.8138 - val_loss: 0.6079
-    Epoch 2/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.7988 - loss: 0.6496 - val_accuracy: 0.8356 - val_loss: 0.5367
-    Epoch 3/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8191 - loss: 0.5875 - val_accuracy: 0.8432 - val_loss: 0.5049
-    Epoch 4/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8296 - loss: 0.5530 - val_accuracy: 0.8491 - val_loss: 0.4894
-    Epoch 5/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8358 - loss: 0.5346 - val_accuracy: 0.8543 - val_loss: 0.4768
-    Epoch 6/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8408 - loss: 0.5122 - val_accuracy: 0.8554 - val_loss: 0.4697
-    Epoch 7/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8420 - loss: 0.5014 - val_accuracy: 0.8570 - val_loss: 0.4611
-    Epoch 8/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8426 - loss: 0.5024 - val_accuracy: 0.8574 - val_loss: 0.4587
-    Epoch 9/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8418 - loss: 0.5034 - val_accuracy: 0.8579 - val_loss: 0.4525
-    Epoch 10/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8477 - loss: 0.4829 - val_accuracy: 0.8606 - val_loss: 0.4513
-    Epoch 11/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8523 - loss: 0.4750 - val_accuracy: 0.8570 - val_loss: 0.4553
-    Epoch 12/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8511 - loss: 0.4743 - val_accuracy: 0.8629 - val_loss: 0.4446
-    Epoch 13/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8476 - loss: 0.4711 - val_accuracy: 0.8640 - val_loss: 0.4410
-    Epoch 14/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8528 - loss: 0.4649 - val_accuracy: 0.8626 - val_loss: 0.4374
-    Epoch 15/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8534 - loss: 0.4655 - val_accuracy: 0.8656 - val_loss: 0.4331
-    Epoch 16/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8538 - loss: 0.4592 - val_accuracy: 0.8633 - val_loss: 0.4377
-    Epoch 17/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8531 - loss: 0.4641 - val_accuracy: 0.8642 - val_loss: 0.4317
-    Epoch 18/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8545 - loss: 0.4599 - val_accuracy: 0.8641 - val_loss: 0.4323
-    Epoch 19/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8557 - loss: 0.4574 - val_accuracy: 0.8631 - val_loss: 0.4332
-    Epoch 20/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8587 - loss: 0.4492 - val_accuracy: 0.8643 - val_loss: 0.4326
-    Epoch 21/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8583 - loss: 0.4477 - val_accuracy: 0.8657 - val_loss: 0.4242
-    Epoch 22/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8581 - loss: 0.4537 - val_accuracy: 0.8675 - val_loss: 0.4261
-    Epoch 23/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8556 - loss: 0.4545 - val_accuracy: 0.8652 - val_loss: 0.4262
-    Epoch 24/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8570 - loss: 0.4476 - val_accuracy: 0.8633 - val_loss: 0.4288
-    Epoch 25/25
-    [1m647/647[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - accuracy: 0.8552 - loss: 0.4455 - val_accuracy: 0.8653 - val_loss: 0.4279
-    
-
-
-```python
-# Evaluación
-y_pred = model.predict(x_test)
-y_pred_labels = y_pred.argmax(axis=1)
-
-display(
-    Markdown("Matriz de Confusión:"),
-    confusion_matrix(y_test, y_pred_labels),
-    Markdown("Informe de Clasificación:"),
-)
-print(classification_report(y_test, y_pred_labels))
-```
-
-    [1m404/404[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 520us/step
-    
-
-
-Matriz de Confusión:
-
-
-
-    array([[ 717,    0,    1,    0,    0,    2,    0,   14,    0,    0,    9,
-              61],
-           [  63,    0,    2,    0,    1,    0,    0,    6,    0,    0,   11,
-               2],
-           [  57,    0,   31,    0,    0,    1,    0,    0,    0,    0,    6,
-              21],
-           [  12,    0,    0,    0,    0,    0,    0,    1,    0,    0,    1,
-               0],
-           [   1,    0,    0,    0,  844,    0,    0,    2,    0,    0,    0,
-               3],
-           [   7,    0,    2,    0,    7,  427,    0,    9,    0,    0,    5,
-             118],
-           [  14,    0,    0,    0,    2,    1,    7,    3,    0,    0,  268,
-             204],
-           [  17,    0,    0,    0,    2,    0,    0, 5720,    0,    0,    3,
-               7],
-           [  16,    0,    1,    0,    0,   11,    0,    0,    0,    0,    6,
-              96],
-           [  42,    0,    3,    0,    0,    0,    0,    1,    0,    0,   11,
-              86],
-           [  22,    1,    0,    0,    0,    2,    4,   14,    0,    0, 1355,
-             107],
-           [  75,    0,   11,    0,    0,   29,    2,    7,    0,    0,  215,
-            2114]])
-
-
-
-Informe de Clasificación:
-
-
-                  precision    recall  f1-score   support
-    
-               0       0.69      0.89      0.78       804
-               1       0.00      0.00      0.00        85
-               2       0.61      0.27      0.37       116
-               3       0.00      0.00      0.00        14
-               4       0.99      0.99      0.99       850
-               5       0.90      0.74      0.81       575
-               6       0.54      0.01      0.03       499
-               7       0.99      0.99      0.99      5749
-               8       0.00      0.00      0.00       130
-               9       0.00      0.00      0.00       143
-              10       0.72      0.90      0.80      1505
-              11       0.75      0.86      0.80      2453
-    
-        accuracy                           0.87     12923
-       macro avg       0.51      0.47      0.46     12923
-    weighted avg       0.84      0.87      0.84     12923
-    
-    
-
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\metrics\_classification.py:1565: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
-      _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\metrics\_classification.py:1565: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
-      _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
-    c:\Users\alexr\.dev\har\api\.venv\Lib\site-packages\sklearn\metrics\_classification.py:1565: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
-      _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
-    
-
-Finalmente, compilamos el modelo para su uso dentro de la aplicación rest.
-
-
-
-```python
+# Se procede a guardar el modelo entrenado
 build_path = Path("..", "build")
 
 if build_path.exists():
@@ -1312,109 +1284,72 @@ None
 ## **Interpretación de resultados**
 
 
-### **Interpretación de los Resultados del Clustering**
+**Rendimiento General del Modelo**
 
-Se ha aplicado el algoritmo **K-Means** con **4 clústeres** sobre los datos para
-identificar patrones dentro del conjunto de datos. A continuación, se
-interpretan los resultados obtenidos:
+El modelo **MLP (Perceptrón Multicapa)** muestra un rendimiento general sólido
+con una precisión del **87%**. Esto indica que de cada 100 predicciones,
+aproximadamente 87 son correctas, lo cual es un resultado satisfactorio para la
+clasificación de actividades humanas.
 
-#### **1. Aplicación del Clustering**
+**Análisis por Actividades**
 
-El modelo K-Means fue entrenado con los datos numéricos, asignando cada muestra
-a uno de los cuatro clústeres definidos. Esto permitió segmentar el conjunto de
-datos en grupos con características similares.
+- Actividades con Excelente Rendimiento:
 
-#### **2. Visualización de los Clústeres**
+  - Lying (acostado): 99.5% de precisión - El modelo identifica casi
+    perfectamente cuando una persona está acostada.
 
-El gráfico generado representa los datos en función de dos componentes
-principales (PC1 y PC2), facilitando su visualización en un espacio
-bidimensional. Cada color representa un clúster diferente, lo que permite
-observar cómo el algoritmo ha distribuido los datos.
+  - Sitting (sentado): 99.3% de precisión - Igualmente exitoso para detectar la
+    posición sentada. Estas actividades probablemente tienen patrones de
+    movimiento muy distintivos que facilitan su clasificación.
 
-#### **3. Distribución de las Muestras por Clúster**
+- Actividades con Buen Rendimiento:
 
-Se observó que los tamaños de los clústeres varían significativamente:
+  - Running (corriendo): 89.7% de precisión - Buena identificación de la
+    actividad de correr.
 
-- **Clúster 0:** 3,345,319 muestras.
-- **Clúster 1:** 2,702,296 muestras.
-- **Clúster 2:** 278,541 muestras.
-- **Clúster 3:** 135,172 muestras.
+  - Cycling_sit (ciclismo sentado): 74.5% de precisión - Rendimiento aceptable.
 
-La diferencia en el número de muestras por clúster sugiere que los datos no
-están distribuidos uniformemente, lo que puede ser indicativo de estructuras o
-patrones particulares en los datos.
+- Walking (caminando): 75.8% de precisión - Clasificación razonable de la
+  caminata.
+- Standing (de pie): 71.1% de precisión - Detección moderada de la posición de
+  pie.
 
-#### **4. Utilidad del Clustering**
+- Actividades con Dificultades:
 
-El clustering es una técnica útil para analizar datos sin etiquetas previas. En
-este caso, su aplicación podría ayudar a:
+- Stairs_down (bajar escaleras): Solo 25% de precisión - El modelo tiene serias
+  dificultades.
 
-- **Identificar patrones de movimiento** en los datos del acelerómetro.
-- **Reducir la complejidad** del análisis al segmentar el conjunto de datos en
-  grupos representativos.
-- **Detectar anomalías**, ya que los clústeres más pequeños pueden representar
-  eventos inusuales.
-- **Facilitar la exploración de datos** sin necesidad de etiquetas predefinidas.
+- Stairs_up (subir escaleras): 28.6% de precisión - Igualmente problemático
+  Shuffling (arrastrando pies): 41% de precisión - Clasificación deficiente.
+- Cycling_stand_inactive: 45.5% de precisión - Problemas con estados inactivos.
 
-El uso de K-Means permitió obtener una segmentación efectiva de los datos,
-proporcionando información valiosa para análisis posteriores.
+- Importancia de las Características:
 
+  Según el gráfico de importancia de características :
 
-## **Conclusiones y siguientes pasos**
+- thigh_z y thigh_x: Son las características más importantes, sugiriendo que los
+  movimientos del muslo en los ejes Z y X son cruciales para distinguir
+  actividades.
 
+- back_x: También muy relevante, indicando que los movimientos del torso son
+  informativos.
 
-### Conclusiones
+- back_z: Moderadamente importante.
 
-- Se confirman correlaciones en las mediciones y se demuestra la utilidad de
-  K-Means para segmentar datos. Se sugiere evaluar si 4 clústeres es óptimo,
-  mejorar el preprocesamiento, probar modelos avanzados como Autoencoders o
-  CNNs, y optimizar el procesamiento de grandes volúmenes de datos. Eficacia de
-  K-Means
+- thigh_y y back_y: Menos influyentes en la clasificación.
 
-- K-Means logra segmentar los datos de aceleración en distintos grupos sin
-  necesidad de etiquetas previas, demostrando su potencial para detectar
-  patrones de inactividad en la vida diaria. Sin embargo, la selección del
-  número de clústeres requiere mayor optimización para garantizar una
-  segmentación más precisa. Impacto de la reducción de dimensionalidad
+- Desafíos Identificados:
 
-- El uso de PCA ayudó a mejorar la interpretación de los datos y facilitó la
-  visualización de los clústeres, lo que sugiere que técnicas de reducción de
-  dimensionalidad son clave en el preprocesamiento. Se podrían evaluar otras
-  técnicas como t-SNE o UMAP para mejorar la representación de los datos.
-  Diferencias en la correlación entre sensores
+  - Confusión entre Actividades Similares:
 
-- Se identificaron correlaciones entre los sensores de la espalda y el muslo, lo
-  que indica que la actividad del usuario afecta de manera diferente cada zona
-  del cuerpo. Esto sugiere que futuros modelos podrían incorporar relaciones
-  entre múltiples sensores para mejorar la detección de actividad. Limitaciones
-  del modelo y mejoras futuras
+    - El modelo confunde actividades con patrones de movimiento parecidos como
+      subir y bajar escaleras que, son particularmente difíciles de distinguir.
 
-- K-Means, al ser un método basado en distancia, puede no capturar completamente
-  la variabilidad en los datos de acelerometría. Modelos más avanzados como
-  redes neuronales recurrentes (RNN), Autoencoders o CNNs podrían ser más
-  efectivos en la detección de patrones complejos. También se podría evaluar la
-  combinación de K-Means con técnicas supervisadas para refinar la
-  clasificación. Aplicaciones prácticas y futuras investigaciones
+    - Las actividades "inactivas" presentan desafíos especiales.
 
-- La detección de inactividad con este enfoque puede aplicarse en monitoreo de
-  salud, prevención de sedentarismo y estudios de ergonomía. Futuros estudios
-  podrían analizar la relación entre los clústeres y eventos específicos de
-  inactividad, para validar la utilidad del método en entornos reales.
+- Desequilibrio de Datos:
 
-
-### Siguientes pasos
-
-
-- Verificar si $k = 4$ es el valor óptimo para la aplicación de K-Means,
-  utilizando técnicas de evaluación como el método del codo o el coeficiente de
-  silueta.
-- Confirmar que los valores atípicos no afectan negativamente al modelo; de ser
-  así, replantear la estrategia de procesamiento.
-- Explorar el uso de redes neuronales para aprovechar de forma óptima la alta
-  dimensionalidad de los datos.
-- Dado el elevado número de registros en el dataset, el consumo de recursos y el
-  tiempo de procesamiento pueden volverse ineficientes. Se recomienda considerar
-  herramientas específicas para el manejo de grandes volúmenes de datos.
-- Identificar patrones que permitan predecir los tipos de movimientos o la
-  actividad física y con ello darle respuesta al problema planteado.
+- Algunas actividades como "stairs_down" (129 muestras) y
+  "cycling_stand_inactive" (20 muestras) tienen muy pocas observaciones. Esto
+  explica parcialmente el bajo rendimiento en estas categorías.
 

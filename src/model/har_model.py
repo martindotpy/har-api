@@ -35,9 +35,9 @@ class HarRequest(BaseModel):
     All the attributes represent accelerometer readings in three axes (X, Y, Z). The range of the values is set to be between -30 and 30, which is a common range for accelerometer data. Please see the [notebook](/notebook/har_clustering.ipynb) for more details on the data collection and processing.
     """
 
-    back_x: float = Field(description="Back X acceleration", gt=-30, lt=30)
-    back_y: float = Field(description="Back Y acceleration", gt=-30, lt=30)
-    back_z: float = Field(description="Back Z acceleration", gt=-30, lt=30)
-    thigh_x: float = Field(description="Thigh X acceleration", gt=-30, lt=30)
-    thigh_y: float = Field(description="Thigh Y acceleration", gt=-30, lt=30)
-    thigh_z: float = Field(description="Thigh Z acceleration", gt=-30, lt=30)
+    back_x: float = Field(description="Back X acceleration", ge=-30, le=30)
+    back_y: float = Field(description="Back Y acceleration", ge=-30, le=30)
+    back_z: float = Field(description="Back Z acceleration", ge=-30, le=30)
+    thigh_x: float = Field(description="Thigh X acceleration", ge=-30, le=30)
+    thigh_y: float = Field(description="Thigh Y acceleration", ge=-30, le=30)
+    thigh_z: float = Field(description="Thigh Z acceleration", ge=-30, le=30)

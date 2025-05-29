@@ -461,7 +461,7 @@ display(
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_13_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_13_0.png)
     
 
 
@@ -636,7 +636,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_21_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_21_0.png)
     
 
 
@@ -674,7 +674,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_23_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
     
 
 
@@ -693,7 +693,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_25_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_25_0.png)
     
 
 
@@ -712,7 +712,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_27_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_27_0.png)
     
 
 
@@ -732,7 +732,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_29_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_29_0.png)
     
 
 
@@ -822,7 +822,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_36_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_36_0.png)
     
 
 
@@ -861,7 +861,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_39_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_39_0.png)
     
 
 
@@ -905,7 +905,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_43_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_43_0.png)
     
 
 
@@ -934,7 +934,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_47_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_47_0.png)
     
 
 
@@ -1234,7 +1234,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_59_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_59_0.png)
     
 
 
@@ -1263,7 +1263,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_61_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_61_0.png)
     
 
 

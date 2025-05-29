@@ -1,16 +1,10 @@
-import logging
-from pathlib import Path
-
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 from error.models import HTTPError
-
-logger = logging.getLogger(__name__)
+from service.notebook_service import get_static_file_of_notebook
 
 notebook_router = APIRouter(tags=["notebook"])
-
-notebook_static_folder = Path.cwd() / "static"
 
 
 @notebook_router.get(
@@ -29,15 +23,10 @@ notebook_static_folder = Path.cwd() / "static"
 )
 def get_notebook_file(file_path: str) -> FileResponse:
     """Retrieve a notebook file."""
-    logger.info("Retrieving notebook file: %s", file_path)
-
-    # Ensure the file path is safe and does not escape the static folder
-    if ".." in file_path or file_path.startswith("/"):
-        raise HTTPException(status_code=400, detail="Invalid file path")
-
-    file = notebook_static_folder / file_path
-
-    if not file.exists() or not file.is_file():
-        raise HTTPException(status_code=404, detail="File not found")
-
-    return FileResponse(file)
+    try:
+        file = get_static_file_of_notebook(file_path)
+        return FileResponse(file)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e

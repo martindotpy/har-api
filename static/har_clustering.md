@@ -562,12 +562,10 @@ Información del DataFrame preprocesado:
 # Aplicar PCA para reducir a 2 dimensiones
 pca = PCA(n_components=2)
 principal_components = pca.fit_transform(df[quantitative_cols].to_arrow())
-df = df.with_columns(
-    [
-        pl.Series("PC1", principal_components[:, 0]),
-        pl.Series("PC2", principal_components[:, 1]),
-    ]
-)
+df = df.with_columns([
+    pl.Series("PC1", principal_components[:, 0]),
+    pl.Series("PC2", principal_components[:, 1]),
+])
 
 df.columns
 ```
@@ -865,10 +863,10 @@ plt.show()
     
 
 
-La gráfica del coeficiente de silueta muestra que K = 2 tiene la mejor
+La gráfica del coeficiente de silueta muestra que K = 4 tiene la mejor
 separación entre clústeres, ya que alcanza el valor más alto. Aunque el método
-del codo sugiere K = 3 como un buen punto, la silueta indica que agrupar en dos
-clústeres da resultados más claros.
+del codo sugiere K = 3 como un buen punto, la silueta indica que agrupar en
+cuatro clústeres da resultados más claros.
 
 
 ### **6.4 Clustering final con K óptimo y asignación de clusters al dataframe**
@@ -1100,22 +1098,20 @@ print(classification_report(y_test, y_pred, digits=4))
 
 # Métricas resumidas en tabla
 display(Markdown("#### Métricas Principales:"))
-metrics_df = pd.DataFrame(
-    {
-        "Métrica": [
-            "Accuracy",
-            "Precision (promedio)",
-            "Recall (promedio)",
-            "F1-score (promedio)",
-        ],
-        "Valor": [
-            accuracy_score(y_test, y_pred),
-            precision_score(y_test, y_pred, average="weighted"),
-            recall_score(y_test, y_pred, average="weighted"),
-            f1_score(y_test, y_pred, average="weighted"),
-        ],
-    }
-)
+metrics_df = pd.DataFrame({
+    "Métrica": [
+        "Accuracy",
+        "Precision (promedio)",
+        "Recall (promedio)",
+        "F1-score (promedio)",
+    ],
+    "Valor": [
+        accuracy_score(y_test, y_pred),
+        precision_score(y_test, y_pred, average="weighted"),
+        recall_score(y_test, y_pred, average="weighted"),
+        f1_score(y_test, y_pred, average="weighted"),
+    ],
+})
 display(metrics_df.round(4))
 ```
 

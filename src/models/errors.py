@@ -9,13 +9,13 @@ class ValidationErrorDetail(BaseModel):
     type: str
 
 
-class HTTPValidationError(BaseModel):
+class HTTPValidationErrorResponse(BaseModel):
     """Represents an HTTP validation error."""
 
     detail: list[ValidationErrorDetail]
 
 
-class HTTPError(BaseModel):
+class HTTPErrorResponse(BaseModel):
     """Represents an HTTP error."""
 
     detail: str

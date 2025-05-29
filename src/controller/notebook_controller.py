@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from error.models import HTTPError
+from models.errors import HTTPErrorResponse
 from service.notebook_service import get_static_file_of_notebook
 
 notebook_router = APIRouter(tags=["notebook"])
@@ -10,14 +10,25 @@ notebook_router = APIRouter(tags=["notebook"])
 @notebook_router.get(
     "/notebook/{file_path:path}",
     responses={
+        400: {
+            "description": "Invalid file path",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid file path: ../example.ipynb"
+                    },
+                }
+            },
+            "model": HTTPErrorResponse,
+        },
         404: {
             "description": "File not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "File not found"},
+                    "example": {"detail": "File not found: example.ipynb"},
                 }
             },
-            "model": HTTPError,
+            "model": HTTPErrorResponse,
         },
     },
 )

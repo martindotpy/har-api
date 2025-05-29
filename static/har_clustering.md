@@ -461,7 +461,7 @@ display(
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_13_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_13_0.png)
     
 
 
@@ -562,10 +562,12 @@ Información del DataFrame preprocesado:
 # Aplicar PCA para reducir a 2 dimensiones
 pca = PCA(n_components=2)
 principal_components = pca.fit_transform(df[quantitative_cols].to_arrow())
-df = df.with_columns([
-    pl.Series("PC1", principal_components[:, 0]),
-    pl.Series("PC2", principal_components[:, 1]),
-])
+df = df.with_columns(
+    [
+        pl.Series("PC1", principal_components[:, 0]),
+        pl.Series("PC2", principal_components[:, 1]),
+    ]
+)
 
 df.columns
 ```
@@ -634,7 +636,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_21_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_21_0.png)
     
 
 
@@ -672,7 +674,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_23_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_23_0.png)
     
 
 
@@ -691,7 +693,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_25_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_25_0.png)
     
 
 
@@ -710,7 +712,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_27_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_27_0.png)
     
 
 
@@ -730,7 +732,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_29_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_29_0.png)
     
 
 
@@ -820,7 +822,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_36_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_36_0.png)
     
 
 
@@ -859,7 +861,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_39_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_39_0.png)
     
 
 
@@ -883,7 +885,6 @@ clusters = kmeans_final.fit_predict(x_scaled)
 
 # Asignar cluster a la muestra, no al dataframe completo
 df = df.with_columns([pl.Series("cluster", clusters)])
-
 ```
 
 
@@ -904,7 +905,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_43_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_43_0.png)
     
 
 
@@ -933,7 +934,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_47_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_47_0.png)
     
 
 
@@ -964,7 +965,6 @@ mlp = MLPClassifier(
     max_iter=200,  # Máximo de iteraciones
     random_state=42,  # Semilla para reproducibilidad
 )
-
 ```
 
 ### **7.2 Predicción y evaluación**
@@ -1100,20 +1100,22 @@ print(classification_report(y_test, y_pred, digits=4))
 
 # Métricas resumidas en tabla
 display(Markdown("#### Métricas Principales:"))
-metrics_df = pd.DataFrame({
-    "Métrica": [
-        "Accuracy",
-        "Precision (promedio)",
-        "Recall (promedio)",
-        "F1-score (promedio)",
-    ],
-    "Valor": [
-        accuracy_score(y_test, y_pred),
-        precision_score(y_test, y_pred, average="weighted"),
-        recall_score(y_test, y_pred, average="weighted"),
-        f1_score(y_test, y_pred, average="weighted"),
-    ],
-})
+metrics_df = pd.DataFrame(
+    {
+        "Métrica": [
+            "Accuracy",
+            "Precision (promedio)",
+            "Recall (promedio)",
+            "F1-score (promedio)",
+        ],
+        "Valor": [
+            accuracy_score(y_test, y_pred),
+            precision_score(y_test, y_pred, average="weighted"),
+            recall_score(y_test, y_pred, average="weighted"),
+            f1_score(y_test, y_pred, average="weighted"),
+        ],
+    }
+)
 display(metrics_df.round(4))
 ```
 
@@ -1243,7 +1245,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_58_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_58_0.png)
     
 
 
@@ -1262,7 +1264,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_60_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_60_0.png)
     
 
 
@@ -1291,7 +1293,7 @@ plt.show()
 
 
     
-![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files\har_clustering_62_0.png)
+![png](https://api-har.martindotpy.dev/api/notebook/har_clustering_files/har_clustering_62_0.png)
     
 
 

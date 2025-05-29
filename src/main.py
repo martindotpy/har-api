@@ -34,5 +34,11 @@ configure_logger(logging.getLogger("uvicorn"))
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app", host=HOST, port=PORT, reload=IS_DEV, server_header=False
+        "main:app",
+        host=HOST,
+        port=PORT,
+        reload=IS_DEV,
+        server_header=False,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )

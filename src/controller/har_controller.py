@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from models.har import HarRequest, HarResponse
+from model.har_model import HarRequest, HarResponse
 from service.har_service import predict_har
 
 har_router = APIRouter(tags=["har"])

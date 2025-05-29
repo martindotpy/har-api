@@ -3,7 +3,7 @@ from pathlib import Path
 import joblib
 from sklearn.neural_network import MLPClassifier
 
-from models.har import HarRequest, HarResponse, HarType
+from model.har_model import HarRequest, HarResponse, HarType
 
 build_path = Path.cwd() / "build"
 model: MLPClassifier = joblib.load(build_path / "mlp_model.pkl")

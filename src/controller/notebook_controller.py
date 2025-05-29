@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from models.errors import HTTPErrorResponse
+from model.error_model import HTTPErrorResponse
 from service.notebook_service import get_static_file_of_notebook
 
 notebook_router = APIRouter(tags=["notebook"])
